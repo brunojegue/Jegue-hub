@@ -1,5 +1,5 @@
 -- Khalexis Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
--- Chaves válidas: "khalexispremium100", "khalexisgeneroso"
+-- Chaves válidas: "khalexispremium100", "khalexislindodms10"
 -- Mensagem de erro: "Key incorreta"
 -- Toggle "K" branco em quadrado preto arredondado
 -- Toggle aparece só ao fechar o hub, some ao abrir
@@ -716,6 +716,29 @@ local function createHub()
         {Name="VinzHub", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Vinzyy13/VinzHub/refs/heads/main/Fish-It"))()end}
     }
 
+    -- Novas categorias adicionadas e organizadas
+    local murderMysteryScripts = {
+        {Name="Murder Mystery Script 1", Func=function() print("Executando Murder Mystery Script 1") end} -- Exemplo, substitua pela URL real
+    }
+    local weakLegacy2Scripts = {
+        {Name="Weak Legacy 2 Script 1", Func=function() print("Executando Weak Legacy 2 Script 1") end} -- Exemplo
+    }
+    local plantaVSBrainrotScripts = {
+        {Name="Planta VS Brainrot Script 1", Func=function() print("Executando Planta VS Brainrot Script 1") end} -- Exemplo
+    }
+    local deadRailsScripts = {
+        {Name="Dead Rails Script 1", Func=function() print("Executando Dead Rails Script 1") end} -- Exemplo
+    }
+    local testeDeQiScripts = {
+        {Name="Teste de Qi Script 1", Func=function() print("Executando Teste de Qi Script 1") end} -- Exemplo
+    }
+    local passOrDieScripts = {
+        {Name="Pass or Die Script 1", Func=function() print("Executando Pass or Die Script 1") end} -- Exemplo
+    }
+    local mathMurderScripts = {
+        {Name="Math Murder Script 1", Func=function() print("Executando Math Murder Script 1") end} -- Exemplo
+    }
+
     -- Category buttons with updated order and new categories
     createCategoryButton("📣 Atualizações 📣",displayUpdates, 1) -- Chama a função para exibir as atualizações formatadas
     createCategoryButton("Steal a Brainrot Scripts",stealScripts, 2)
@@ -732,6 +755,14 @@ local function createHub()
     createCategoryButton("Natural Disaster Scripts",naturalDisasterScripts, 13)
     createCategoryButton("Forsaken Scripts", forsakenScripts, 14) -- NOVA CATEGORIA: Forsaken Scripts
     createCategoryButton("Pegue o Peixe Scripts", pegueOPeixeScripts, 15) -- NOVA CATEGORIA: Pegue o Peixe Scripts
+    -- Novas categorias adicionadas no final
+    createCategoryButton("Murder mystery Scripts", murderMysteryScripts, 16)
+    createCategoryButton("Weak legacy 2", weakLegacy2Scripts, 17)
+    createCategoryButton("Planta VS brainrot Scripts", plantaVSBrainrotScripts, 18)
+    createCategoryButton("Dead rails Scripts", deadRailsScripts, 19)
+    createCategoryButton("Teste de Qi Scripts", testeDeQiScripts, 20)
+    createCategoryButton("Pass or Die Scripts", passOrDieScripts, 21)
+    createCategoryButton("Math Murder Scripts", mathMurderScripts, 22)
 
     -- Simula um clique na primeira categoria para que os scripts apareçam ao abrir
     local firstCategoryButton = categoryContainer:FindFirstChildOfClass("TextButton")
