@@ -1,9 +1,10 @@
--- Khalexis Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
--- Chaves válidas: "khalexispremium100", "khalexislindodms10"
--- Mensagem de erro: "Key incorreta"
--- Toggle "K" branco em quadrado preto arredondado
--- Toggle aparece só ao fechar o hub, some ao abrir
--- Toggle posicionado no canto superior esquerdo, clicável e arrastável (mouse/touch)
+--[[
+    -- Khalexis Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
+    -- Chaves válidas: "khalexispremium100", "khalexislindodms10"
+    -- Mensagem de erro: "Key incorreta"
+    -- Toggle "K" branco em quadrado preto arredondado
+    -- Toggle aparece sempre visível, clicável e arrastável (mouse/touch)
+--]]
 
 local function applyRoundedCorners(guiObject, radius)
     local corner = Instance.new("UICorner")
@@ -319,7 +320,7 @@ local function createHub()
 
     local categoryFrame=Instance.new("ScrollingFrame")
     categoryFrame.Name="CategoryFrame"
-    categoryFrame.Size=UDim2.new(0,120,1,-95) -- Largura e altura ajustadas
+    categoryFrame.Size=UDim2.new(0,120,1,-70) -- ALTURA AJUSTADA PARA DAR MAIS ESPAÇO PARA AS CATEGORIAS
     categoryFrame.Position=UDim2.new(0,5,0,67) -- Posição ajustada
     categoryFrame.BackgroundColor3=COLOR_CATEGORY_BG
     categoryFrame.BorderSizePixel=0
@@ -835,7 +836,7 @@ local function showLoadingAndOpenHub()
 
     MainFrameContainer=createHub()
     HubOpen=true
-    ToggleButton.Visible=false
+    -- REMOVIDO: ToggleButton.Visible=false -- Garante que o toggle permaneça visível
 end
 
 local function validateKeyAndOpen(key,isAuto)
@@ -844,7 +845,7 @@ local function validateKeyAndOpen(key,isAuto)
         saveKeyLocally(lowerKey)
         if KeyFrame and KeyFrame.Parent then KeyFrame:Destroy(); KeyFrame=nil end
         showLoadingAndOpenHub()
-        ToggleButton.Visible=false
+        ToggleButton.Visible=false -- Aqui também o toggle fica invisível ao ABRIR o hub, mas ele volta a ser visível quando o hub é FECHADO. Se quiser que ele fique SEMPRE visível, esta linha também precisa ser comentada/removida.
         if isAuto then showAutoMessage("Khalexis Hub carregado! Sua key foi verificada automaticamente.") end
         return true
     else
@@ -983,7 +984,7 @@ ToggleButton.Font=Enum.Font.GothamBold
 ToggleButton.TextSize=24 -- Tamanho da fonte do toggle ajustado
 ToggleButton.Parent=ScreenGui
 applyRoundedCorners(ToggleButton,10)
-ToggleButton.Visible=false
+-- REMOVIDO: ToggleButton.Visible=false -- O toggle agora é sempre visível por padrão.
 
 local draggingToggle=false
 local dragStartToggle,startPosToggle
@@ -1028,7 +1029,7 @@ ToggleButton.MouseButton1Click:Connect(function()
         if HasShownWelcome then
             MainFrameContainer=createHub()
             HubOpen=true
-            ToggleButton.Visible=false
+            -- REMOVIDO: ToggleButton.Visible=false -- Garantindo que o toggle não fique invisível ao abrir
         else
             showLoadingAndOpenHub() -- Chama a função que agora inclui a mensagem de boas-vindas
         end
