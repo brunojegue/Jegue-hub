@@ -319,12 +319,13 @@ local function createHub()
 
     local categoryFrame = Instance.new("ScrollingFrame")
     categoryFrame.Name = "CategoryFrame"
-    categoryFrame.Size = UDim2.new(0, 120, 0, 330) -- Altura ajustada para 15 categorias (~330px: 15 * 22 + 14 * 8)
-    categoryFrame.Position = UDim2.new(0, 5, 0, 67) -- Posição ajustada
+    -- Ajustando para ocupar o espaço disponível dentro do MainFrame
+    categoryFrame.Size = UDim2.new(0, 120, 1, -135) -- Altura total menos TitleBar (40px) e FooterBackground (45px) + margens
+    categoryFrame.Position = UDim2.new(0, 5, 0, 67) -- Começa após a searchBox (40 + 22 + 5)
     categoryFrame.BackgroundColor3 = COLOR_CATEGORY_BG
     categoryFrame.BorderSizePixel = 0
     categoryFrame.ScrollBarThickness = 6
-    categoryFrame.CanvasSize = UDim2.new(0, 0, 0, 400) -- Espaço inicial para rolagem
+    categoryFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Inicia com tamanho zero, ajustado dinamicamente
     categoryFrame.Parent = frame
     applyRoundedCorners(categoryFrame, 12)
 
@@ -346,14 +347,14 @@ local function createHub()
     categoryContainer.Parent = categoryFrame
     categoryContainer.ClipsDescendants = true
     local layoutCategory = Instance.new("UIListLayout")
-    layoutCategory.Padding = UDim.new(0, 8) -- Padding reduzido para 8px
+    layoutCategory.Padding = UDim.new(0, 8) -- Padding ajustado para 8px
     layoutCategory.SortOrder = Enum.SortOrder.LayoutOrder
     layoutCategory.FillDirection = Enum.FillDirection.Vertical
     layoutCategory.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layoutCategory.Parent = categoryContainer
     layoutCategory:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         categoryContainer.Size = UDim2.new(1, -10, 0, layoutCategory.AbsoluteContentSize.Y)
-        categoryFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(330, layoutCategory.AbsoluteContentSize.Y + 20)) -- Ajuste dinâmico
+        categoryFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(layoutCategory.AbsoluteContentSize.Y + 10, 0)) -- Ajusta dinamicamente
     end)
     searchBox:GetPropertyChangedSignal("Text"):Connect(function()
         local s = searchBox.Text:lower()
