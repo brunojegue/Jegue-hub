@@ -1,9 +1,9 @@
 --[[
-    -- Khalexis Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configuraÃ§Ãµes de tema
-    -- Chaves vÃ¡lidas: "khalexispremium100", "khalexislindodms10"
+    -- Khalexis Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
+    -- Chaves válidas: "khalexispremium100", "khalexislindodms10"
     -- Mensagem de erro: "Key incorreta"
     -- Toggle "K" branco em quadrado preto arredondado
-    -- Toggle aparece sempre visÃ­vel, clicÃ¡vel e arrastÃ¡vel (mouse/touch)
+    -- Toggle aparece sempre visível, clicável e arrastável (mouse/touch)
 --]]
 
 local function applyRoundedCorners(guiObject, radius)
@@ -32,7 +32,7 @@ local themes = {
     transparente = {main_bg = Color3.fromRGB(30, 30, 30), category_bg = Color3.fromRGB(50, 50, 50), title_bar = Color3.fromRGB(45, 45, 45), script_frame_bg = Color3.fromRGB(30, 30, 30), transparency = 0.4}
 }
 
--- Cores PadrÃ£o
+-- Cores Padrão
 local COLOR_BLACK = themes.normal.main_bg
 local COLOR_CATEGORY_BG = themes.normal.category_bg
 local COLOR_CATEGORY_BTN = Color3.fromRGB(90, 90, 90)
@@ -233,10 +233,10 @@ local function createHub()
     local searchBox = Instance.new("TextBox")
     searchBox.Name = "CategorySearchBox"
     searchBox.Size = UDim2.new(0, 120, 0, 22)
-    searchBox.Position = UDim2.new(0, 5, 0, 50) -- ApÃ³s TitleBar (40px) + 5px margem
+    searchBox.Position = UDim2.new(0, 5, 0, 50) -- Após TitleBar (40px) + 5px margem
     searchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     searchBox.TextColor3 = COLOR_TEXT
-    searchBox.PlaceholderText = "ðŸ” Pesquisar..."
+    searchBox.PlaceholderText = "🔍 Pesquisar..."
     searchBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
     searchBox.Text = ""
     searchBox.Font = Enum.Font.Gotham
@@ -255,8 +255,8 @@ local function createHub()
     searchBoxGradient.Parent = searchBoxBorder
     local categoryFrame = Instance.new("ScrollingFrame")
     categoryFrame.Name = "CategoryFrame"
-    categoryFrame.Size = UDim2.new(0, 120, 0, 168) -- Altura fixa de 168px (espaÃ§o disponÃ­vel)
-    categoryFrame.Position = UDim2.new(0, 5, 0, 77) -- ApÃ³s TitleBar (40px) + searchBox (22px) + 5px + 10px margem
+    categoryFrame.Size = UDim2.new(0, 120, 0, 168) -- Altura fixa de 168px (espaço disponível)
+    categoryFrame.Position = UDim2.new(0, 5, 0, 77) -- Após TitleBar (40px) + searchBox (22px) + 5px + 10px margem
     categoryFrame.BackgroundColor3 = COLOR_CATEGORY_BG
     categoryFrame.BorderSizePixel = 0
     categoryFrame.ScrollBarThickness = 4 -- Barra de rolagem mais discreta
@@ -288,7 +288,7 @@ local function createHub()
     layoutCategory.Parent = categoryContainer
     layoutCategory:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         categoryContainer.Size = UDim2.new(1, -10, 0, layoutCategory.AbsoluteContentSize.Y)
-        categoryFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(layoutCategory.AbsoluteContentSize.Y + 10, 200)) -- Garante scroll mÃ­nimo
+        categoryFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(layoutCategory.AbsoluteContentSize.Y + 10, 200)) -- Garante scroll mínimo
     end)
     searchBox:GetPropertyChangedSignal("Text"):Connect(function()
         local s = searchBox.Text:lower()
@@ -302,7 +302,7 @@ local function createHub()
     local scriptFrame = Instance.new("ScrollingFrame")
     scriptFrame.Name = "ScriptFrame"
     scriptFrame.Size = UDim2.new(1, -135, 0, 195) -- Altura ajustada para 195px (280px - 40px TitleBar - 45px Footer)
-    scriptFrame.Position = UDim2.new(0, 130, 0, 40) -- ComeÃ§a apÃ³s TitleBar
+    scriptFrame.Position = UDim2.new(0, 130, 0, 40) -- Começa após TitleBar
     scriptFrame.BackgroundColor3 = COLOR_BLACK
     scriptFrame.BorderSizePixel = 0
     scriptFrame.ScrollBarThickness = 4
@@ -417,7 +417,7 @@ local function createHub()
     discordLabel.Parent = footerRightContainer
     local hintLabel = Instance.new("TextLabel")
     hintLabel.Name = "DudaLabel"
-    hintLabel.Text = "Se tiver alguma dÃºvida entre no Discord!"
+    hintLabel.Text = "Se tiver alguma dúvida entre no Discord!"
     hintLabel.Font = Enum.Font.Gotham
     hintLabel.TextSize = 7
     hintLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
@@ -577,9 +577,9 @@ local function createHub()
         {Text = "+1 Script Forsaken", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "+1 Script Pegue o Peixe!", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "Nova Mensagem de Boas Vindas!", Color = Color3.fromRGB(220, 220, 220)},
-        {Text = "CorreÃ§Ãµes de Bugs", Color = Color3.fromRGB(220, 220, 220)},
+        {Text = "Correções de Bugs", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "Tamanho do Hub Editado", Color = Color3.fromRGB(220, 220, 220)},
-        {Text = "DEIXE UMA SUGESTÃƒO NO DC!", Color = Color3.fromRGB(255, 140, 0), Font = Enum.Font.GothamBold},
+        {Text = "DEIXE UMA SUGESTÃO NO DC!", Color = Color3.fromRGB(255, 140, 0), Font = Enum.Font.GothamBold},
     }
     local function displayUpdates()
         clearScripts()
@@ -606,35 +606,40 @@ local function createHub()
     local murderMysteryScripts = {{Name = "Thunder hub MM2", Func = function() loadstring(game:HttpGet('https://raw.githubusercontent.com/Roman34296589/SnapSanixHUB/refs/heads/main/SnapSanixHUB.lua'))() end}}
     local weakLegacy2Scripts = {{Name = "L4BIB HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/L4BIBKAZI/L4BIB-HUB/refs/heads/main/Weak%20Legacy%202"))() end}}
     local plantaVSBrainrotScripts = {{Name = "Gumanba", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/main/PlantsVsBrainrots"))() end}}
-    local deadRailsScripts = {{Name = "Qiwik hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Qiwikox12/stubrawl/refs/heads/main/DeadRails.txt"))() end}}
+    local deadRailsScripts = {
+        {Name = "Qiwik hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Qiwikox12/stubrawl/refs/heads/main/DeadRails.txt"))() end},
+        {Name = "Tora IsMe", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/refs/heads/main/DeadRails", true))() end}
+    }
     local testeDeQiScripts = {{Name = "Aqua-Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/ExploiterGuy/Aqua-Hub/refs/heads/main/IQ%20TEST.txt"))() end}}
     local passOrDieScripts = {{Name = "DAVITROLLZ", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Davidfhdgfyyfytyttry/DAVITROLLZ-BRASIL/refs/heads/main/Pass%20or%20die"))() end}}
-    local mathMurderScripts = {}
+    local mathMurderScripts = {
+        {Name = "Tora IsMe", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/refs/heads/main/MathMurder", true))() end}
+    }
     local fightingGamesScripts = {{Name = "Hub Fighting (Exemplo 1)", Func = function() loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_FIGHTING_GAMES_1"))() end}}
     local simulationScripts = {{Name = "Hub Sim (Exemplo 1)", Func = function() loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_SIMULATION_1"))() end}}
     local tycoonScripts = {{Name = "Hub Tycoon (Exemplo 1)", Func = function() loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_TYCOON_1"))() end}}
 
-    createCategoryButton("ðŸ“£ AtualizaÃ§Ãµes ðŸ“£", displayUpdates, 1)
-    createCategoryButton("Steal a Brainrot Scripts", stealScripts, 2)
-    createCategoryButton("99 Noites na Floresta Scripts", noiteScripts, 3)
-    createCategoryButton("Grow a Garden Scripts", growScripts, 4)
+    createCategoryButton("📣 Atualizações 📣", displayUpdates, 1)
+    createCategoryButton("Steal A Brainrot Scripts", stealScripts, 2)
+    createCategoryButton("99 Noites Na Floresta Scripts", noiteScripts, 3)
+    createCategoryButton("Grow A Garden Scripts", growScripts, 4)
     createCategoryButton("Vox Seas Scripts", voxSeasScripts, 5)
     createCategoryButton("Blox Fruits Scripts", bloxFruitsScripts, 6)
     createCategoryButton("King Legacy Scripts", kingLegacyScripts, 7)
     createCategoryButton("Rivals Scripts", rivalsScripts, 8)
     createCategoryButton("Doors Scripts", doorsScripts, 9)
     createCategoryButton("Brookhaven Scripts", brookhavenScripts, 10)
-    createCategoryButton("Build a Plane Scripts", buildAPlaneScripts, 11)
+    createCategoryButton("Build A Plane Scripts", buildAPlaneScripts, 11)
     createCategoryButton("Ink Game Scripts", inkGameScripts, 12)
     createCategoryButton("Natural Disaster Scripts", naturalDisasterScripts, 13)
     createCategoryButton("Forsaken Scripts", forsakenScripts, 14)
-    createCategoryButton("Pegue o Peixe Scripts", pegueOPeixeScripts, 15)
-    createCategoryButton("Murder mystery Scripts", murderMysteryScripts, 16)
-    createCategoryButton("Weak legacy 2", weakLegacy2Scripts, 17)
-    createCategoryButton("Planta VS brainrot Scripts", plantaVSBrainrotScripts, 18)
-    createCategoryButton("Dead rails Scripts", deadRailsScripts, 19)
-    createCategoryButton("Teste de Qi Scripts", testeDeQiScripts, 20)
-    createCategoryButton("Pass or Die Scripts", passOrDieScripts, 21)
+    createCategoryButton("Pegue O Peixe Scripts", pegueOPeixeScripts, 15)
+    createCategoryButton("Murder Mystery Scripts", murderMysteryScripts, 16)
+    createCategoryButton("Weak Legacy 2", weakLegacy2Scripts, 17)
+    createCategoryButton("Planta Vs Brainrot Scripts", plantaVSBrainrotScripts, 18)
+    createCategoryButton("Dead Rails Scripts", deadRailsScripts, 19)
+    createCategoryButton("Teste De Qi Scripts", testeDeQiScripts, 20)
+    createCategoryButton("Pass Or Die Scripts", passOrDieScripts, 21)
     createCategoryButton("Math Murder Scripts", mathMurderScripts, 22)
     createCategoryButton("Fighting Games", fightingGamesScripts, 23)
     createCategoryButton("Simulation Games", simulationScripts, 24)
@@ -727,7 +732,7 @@ local function createKeyInputFrame()
     titleLabel.Name = "KeyTitle"
     titleLabel.Size = UDim2.new(1, 0, 0, 30)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "ðŸ”‘ COLE NO ESPAÃ‡O ABAIXO A SUA KEY ðŸ”‘"
+    titleLabel.Text = "🔑 COLE NO ESPAÇO ABAIXO A SUA KEY 🔑"
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextSize = 14
     titleLabel.TextYAlignment = Enum.TextYAlignment.Center
