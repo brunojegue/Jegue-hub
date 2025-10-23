@@ -89,11 +89,11 @@ local validKeys = {
 
 local function saveKeyLocally(key) pcall(function() if writefile then writefile(StorageKeyFileName, key) elseif write_file then write_file(StorageKeyFileName, key) end end) end
 local function loadKeyLocally() local s,c = pcall(function() if readfile then return readfile(StorageKeyFileName) elseif read_file then return read_file(StorageKeyFileName) end end); if s and c then return c:lower() end; return nil end
-local function removeLocalKey() pcall(function() if delfile then delfile(StorageKeyFileName) elseif deletefile then deletefile(StorageKeyFileName) end end) end
+local function removeLocalKey() pcall(function() if delfile then delfile(StorageKeyFileName)elseif deletefile then deletefile(StorageKeyFileName) end end) end
 
 local function showAutoMessage(msg) local m = Instance.new("Frame"); m.Name="AutoMessageFrame"; m.Size=UDim2.new(0,320,0,45); m.Position=UDim2.new(1,-330,1,-55); m.BackgroundColor3=COLOR_BLACK; m.BorderSizePixel=0; m.Parent=ScreenGui; applyRoundedCorners(m,10); local l=Instance.new("TextLabel"); l.Size=UDim2.new(1,-20,1,-10); l.Position=UDim2.new(0,10,0,5); l.BackgroundTransparency=1; l.TextColor3=COLOR_TEXT; l.Font=Enum.Font.GothamBold; l.TextSize=16; l.Text=msg; l.TextWrapped=true; l.TextXAlignment=Enum.TextXAlignment.Left; l.TextYAlignment=Enum.TextYAlignment.Center; l.Parent=m; spawn(function() wait(4); if m and m.Parent then m:Destroy() end end) end
 local function showError(msg) if ErrorLabel then ErrorLabel.Text=msg; spawn(function() wait(2); if ErrorLabel and ErrorLabel.Parent then ErrorLabel.Text="" end end) end end
-local function copyToClipboard(text) return pcall(function() if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) else error("Clipboard function not supported.") end end) end
+local function copyToClipboard(text) return pcall(function() if setclipboard then setclipboard(text)elseif toclipboard then toclipboard(text) else error("Clipboard function not supported.") end end) end
 
 -- Função reutilizável para a animação de fechamento
 local function closeHubWithAnimation(container)
@@ -346,7 +346,8 @@ local function createHub()
     categoryContainer.Parent=categoryFrame
     categoryContainer.ClipsDescendants=true
     local layoutCategory=Instance.new("UIListLayout")
-    layoutCategory.Padding=UDim.new(0,6) -- Padding ajustado
+    -- AUMENTADO O PADDING PARA DAR MAIS ESPAÇO ENTRE AS CATEGORIAS E PERMITIR MAIS ROLAGEM
+    layoutCategory.Padding=UDim.new(0,12)
     layoutCategory.SortOrder=Enum.SortOrder.LayoutOrder
     layoutCategory.FillDirection=Enum.FillDirection.Vertical
     layoutCategory.HorizontalAlignment=Enum.HorizontalAlignment.Center
@@ -742,6 +743,20 @@ local function createHub()
         -- Adicione scripts aqui se necessário para esta categoria
     }
 
+    -- ADICIONANDO NOVAS CATEGORIAS PARA EXPANDIR A LISTA E A ROlAGEM
+    local fightingGamesScripts = {
+        {Name="Hub Fighting (Exemplo 1)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_FIGHTING_GAMES_1"))()end},
+        {Name="Hub Fighting (Exemplo 2)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_FIGHTING_GAMES_2"))()end}
+    }
+    local simulationScripts = {
+        {Name="Hub Sim (Exemplo 1)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_SIMULATION_1"))()end},
+        {Name="Hub Sim (Exemplo 2)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_SIMULATION_2"))()end}
+    }
+    local tycoonScripts = {
+        {Name="Hub Tycoon (Exemplo 1)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_TYCOON_1"))()end}
+    }
+    -- Adicione mais categorias e scripts conforme necessário. Quanto mais, mais rolagem você terá.
+
     -- Category buttons with updated order and new categories
     createCategoryButton("📣 Atualizações 📣",displayUpdates, 1) -- Chama a função para exibir as atualizações formatadas
     createCategoryButton("Steal a Brainrot Scripts",stealScripts, 2)
@@ -766,6 +781,12 @@ local function createHub()
     createCategoryButton("Teste de Qi Scripts", testeDeQiScripts, 20)
     createCategoryButton("Pass or Die Scripts", passOrDieScripts, 21)
     createCategoryButton("Math Murder Scripts", mathMurderScripts, 22)
+    -- Adicionando as novas categorias criadas
+    createCategoryButton("Fighting Games", fightingGamesScripts, 23)
+    createCategoryButton("Simulation Games", simulationScripts, 24)
+    createCategoryButton("Tycoon Games", tycoonScripts, 25)
+    -- Adicione mais botões de categoria aqui para aumentar a rolagem
+
 
     -- Simula um clique na primeira categoria para que os scripts apareçam ao abrir
     local firstCategoryButton = categoryContainer:FindFirstChildOfClass("TextButton")
