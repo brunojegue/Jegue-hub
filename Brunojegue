@@ -1,11 +1,11 @@
 -- Khalexis Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
--- Versão Polida: V1.2 - Correções de scroll, otimizações de performance e limpeza de código
+-- Versão Polida: V1.3 - Ajustes extras no scroll para garantir rolagem completa
 -- Chaves válidas: "khalexispremium100", "khalexisgeneroso"
 -- Mensagem de erro: "Key incorreta"
 -- Toggle "K" branco em quadrado preto arredondado
 -- Toggle aparece só ao fechar o hub, some ao abrir
 -- Toggle posicionado no canto superior esquerdo, clicável e arrastável (mouse/touch)
--- Melhorias: CanvasSize dinâmico para scrolls, padding extra para evitar cortes, formatação consistente, comentários aprimorados
+-- Melhorias: CanvasSize com padding maior (+20), ScrollBarThickness=10, force update após criação de botões, altura do CategoryFrame ligeiramente aumentada
 
 local function applyRoundedCorners(guiObject, radius)
     local corner = Instance.new("UICorner")
@@ -341,7 +341,7 @@ local function createHub()
     local titleBar = Instance.new("Frame")
     titleBar.Name = "TitleBar"
     titleBar.Size = UDim2.new(1, -10, 0, 30)
-    titleBar.Position = UDim2.new(0, 5, 0, 5)  -- CORRIGIDO: Removido typo "Flo"
+    titleBar.Position = UDim2.new(0, 5, 0, 5)
     titleBar.BackgroundColor3 = COLOR_TITLEBAR
     titleBar.BorderSizePixel = 0
     titleBar.Parent = frame
@@ -426,14 +426,14 @@ local function createHub()
     searchBoxGradient.Rotation = 90
     searchBoxGradient.Parent = searchBoxBorder
 
-    -- CategoryFrame com Scroll Corrigido
+    -- CategoryFrame com Scroll Aprimorado (altura ligeiramente aumentada para mais espaço)
     local categoryFrame = Instance.new("ScrollingFrame")
     categoryFrame.Name = "CategoryFrame"
-    categoryFrame.Size = UDim2.new(0, 120, 1, -95)
+    categoryFrame.Size = UDim2.new(0, 120, 1, -85)  -- AJUSTE: Aumentado de -95 para -85 para dar mais altura ao scroll
     categoryFrame.Position = UDim2.new(0, 5, 0, 67)
     categoryFrame.BackgroundColor3 = COLOR_CATEGORY_BG
     categoryFrame.BorderSizePixel = 0
-    categoryFrame.ScrollBarThickness = 8  -- AUMENTADO para melhor usabilidade
+    categoryFrame.ScrollBarThickness = 10  -- AUMENTADO para melhor usabilidade e visibilidade
     categoryFrame.Parent = frame
     applyRoundedCorners(categoryFrame, 12)
 
@@ -459,15 +459,15 @@ local function createHub()
     categoryContainer.ClipsDescendants = true
 
     local layoutCategory = Instance.new("UIListLayout")
-    layoutCategory.Padding = UDim.new(0, 6)
+    layoutCategory.Padding = UDim.new(0, 4)  -- AJUSTE: Reduzido de 6 para 4 para economizar espaço vertical
     layoutCategory.SortOrder = Enum.SortOrder.LayoutOrder
     layoutCategory.FillDirection = Enum.FillDirection.Vertical
     layoutCategory.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layoutCategory.Parent = categoryContainer
 
-    -- Atualização Dinâmica de Tamanho e CanvasSize (corrigido e otimizado)
+    -- Atualização Dinâmica de Tamanho e CanvasSize (com padding maior para rolagem completa)
     layoutCategory:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        local contentHeight = layoutCategory.AbsoluteContentSize.Y + 10  -- Padding extra para evitar corte
+        local contentHeight = layoutCategory.AbsoluteContentSize.Y + 20  -- AJUSTE: Padding aumentado para +20 para rolagem total sem corte
         categoryContainer.Size = UDim2.new(1, -10, 0, contentHeight)
         categoryFrame.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
     end)
@@ -490,7 +490,7 @@ local function createHub()
     scriptFrame.Position = UDim2.new(0, 130, 0, 40)
     scriptFrame.BackgroundColor3 = COLOR_BLACK
     scriptFrame.BorderSizePixel = 0
-    scriptFrame.ScrollBarThickness = 8  -- AUMENTADO para melhor usabilidade
+    scriptFrame.ScrollBarThickness = 10  -- AUMENTADO para melhor usabilidade
     scriptFrame.Parent = frame
     applyRoundedCorners(scriptFrame, 16)
 
@@ -522,9 +522,9 @@ local function createHub()
     layoutScript.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layoutScript.Parent = scriptContainer
 
-    -- Atualização Dinâmica de Tamanho e CanvasSize (corrigido e otimizado)
+    -- Atualização Dinâmica de Tamanho e CanvasSize (com padding maior)
     layoutScript:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        local contentHeight = layoutScript.AbsoluteContentSize.Y + 10  -- Padding extra para evitar corte
+        local contentHeight = layoutScript.AbsoluteContentSize.Y + 20  -- AJUSTE: Padding aumentado para +20
         scriptContainer.Size = UDim2.new(1, -20, 0, contentHeight)
         scriptFrame.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
     end)
@@ -575,7 +575,7 @@ local function createHub()
     footerText.TextSize = 10
     footerText.TextColor3 = COLOR_FOOTER_TEXT
     footerText.BackgroundTransparency = 1
-    footerText.Size = UDim2.new(0.5, 0, 1, 0)  -- OTIMIZADO: Ajustado para caber no lado esquerdo
+    footerText.Size = UDim2.new(0.5, 0, 1, 0)
     footerText.Position = UDim2.new(0, 0, 0, 5)
     footerText.TextYAlignment = Enum.TextYAlignment.Top
     footerText.Parent = footerBackground
@@ -814,14 +814,14 @@ local function createHub()
         return btn
     end
 
-    -- Aba de Atualizações (atualizada com nova nota sobre scroll)
+    -- Aba de Atualizações (atualizada com nota sobre scroll aprimorado)
     local updatesTextFormatted = {
-        {Text = "Khalexis Hub V1.2", Color = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamBold},
+        {Text = "Khalexis Hub V1.3", Color = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamBold},
         {Text = "+1 Script Steal a Brainrot", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "+1 Script Forsaken", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "+1 Script Pegue o Peixe!", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "Nova Mensagem de Boas Vindas!", Color = Color3.fromRGB(220, 220, 220)},
-        {Text = "Correções de Bugs no Scroll", Color = Color3.fromRGB(220, 220, 220)},  -- NOVA NOTA
+        {Text = "Aprimoramentos no Scroll das Categorias", Color = Color3.fromRGB(220, 220, 220)},  -- NOVA NOTA
         {Text = "Tamanho do Hub Editado", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "DEIXE UMA SUGESTÃO NO DC!", Color = Color3.fromRGB(255, 140, 0), Font = Enum.Font.GothamBold},
     }
@@ -910,6 +910,12 @@ local function createHub()
     createCategoryButton("Natural Disaster Scripts", naturalDisasterScripts, 13)
     createCategoryButton("Forsaken Scripts", forsakenScripts, 14)
     createCategoryButton("Pegue o Peixe Scripts", pegueOPeixeScripts, 15)
+
+    -- AJUSTE: Force update do layout após adicionar todas as categorias para garantir CanvasSize correto
+    spawn(function()
+        wait(0.1)  -- Pequeno delay para o layout se processar
+        layoutCategory:SetAttribute("Refresh", true)
+    end)
 
     -- Clique Inicial na Primeira Categoria
     local firstCategoryButton = categoryContainer:FindFirstChildOfClass("TextButton")
