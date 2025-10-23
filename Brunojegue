@@ -1,5 +1,5 @@
 --[[
-    -- Khalexis Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
+    -- Brunojegue Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
     -- Chaves válidas: "khalexispremium100", "khalexislindodms10"
     -- Mensagem de erro: "Key incorreta"
     -- Toggle "K" branco em quadrado preto arredondado
@@ -19,7 +19,7 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KhalexisHub"
+ScreenGui.Name = "BrunojegueHub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = game.CoreGui
 
@@ -51,7 +51,7 @@ local ToggleButton
 local ErrorLabel
 local HasShownWelcome = false
 
-local StorageKeyFileName = "KhalexisHubKey.txt"
+local StorageKeyFileName = "BrunojegueHubKey.txt"
 local validKeys = {khalexispremium100 = true, khalexislindodms10 = true}
 
 local function saveKeyLocally(key) pcall(function() if writefile then writefile(StorageKeyFileName, key) elseif write_file then write_file(StorageKeyFileName, key) end end) end
@@ -201,7 +201,7 @@ local function createHub()
     titleLabel.Name = "Title"
     titleLabel.Size = UDim2.new(1, 0, 1, 0)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "Khalexis Hub"
+    titleLabel.Text = "Brunojegue Hub"
     titleLabel.TextColor3 = COLOR_TEXT
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextSize = 18
@@ -368,7 +368,7 @@ local function createHub()
     footerGradient.Parent = footerBorder
     local footerText = Instance.new("TextLabel")
     footerText.Name = "FooterText"
-    footerText.Text = "By Khalexis"
+    footerText.Text = "By Brunojegue"
     footerText.Font = Enum.Font.GothamBold
     footerText.TextSize = 10
     footerText.TextColor3 = COLOR_FOOTER_TEXT
@@ -395,7 +395,7 @@ local function createHub()
     footerTextLayout.Parent = footerRightContainer
     local ytLabel = Instance.new("TextLabel")
     ytLabel.Name = "YouTubeLabel"
-    ytLabel.Text = "Youtube: Khalexis"
+    ytLabel.Text = "Youtube: Brunojegue"
     ytLabel.Font = Enum.Font.Gotham
     ytLabel.TextSize = 9
     ytLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
@@ -572,7 +572,7 @@ local function createHub()
         return btn
     end
     local updatesTextFormatted = {
-        {Text = "Khalexis Hub V1.1", Color = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamBold},
+        {Text = "Brunojegue Hub V1.1", Color = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamBold},
         {Text = "+1 Script Steal a Brainrot", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "+1 Script Forsaken", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "+1 Script Pegue o Peixe!", Color = Color3.fromRGB(220, 220, 220)},
@@ -671,7 +671,7 @@ local function showLoadingAndOpenHub()
         welcomeMsg.TextColor3 = Color3.fromRGB(255, 255, 255)
         welcomeMsg.Font = Enum.Font.GothamBold
         welcomeMsg.TextSize = 20
-        welcomeMsg.Text = "Bem Vindo " .. player.Name .. " ao Khalexis Hub!"
+        welcomeMsg.Text = "Bem Vindo " .. player.Name .. " ao Brunojegue Hub!"
         welcomeMsg.TextWrapped = true
         welcomeMsg.TextXAlignment = Enum.TextXAlignment.Center
         welcomeMsg.TextYAlignment = Enum.TextYAlignment.Center
@@ -703,7 +703,7 @@ local function validateKeyAndOpen(key, isAuto)
         if KeyFrame and KeyFrame.Parent then KeyFrame:Destroy(); KeyFrame = nil end
         showLoadingAndOpenHub()
         ToggleButton.Visible = false
-        if isAuto then showAutoMessage("Khalexis Hub carregado! Sua key foi verificada automaticamente.") end
+        if isAuto then showAutoMessage("Brunojegue Hub carregado! Sua key foi verificada automaticamente.") end
         return true
     else
         removeLocalKey()
@@ -741,7 +741,7 @@ local function createKeyInputFrame()
     byLabel.TextColor3 = COLOR_FOOTER_TEXT
     byLabel.Font = Enum.Font.Gotham
     byLabel.TextSize = 10
-    byLabel.Text = "by khalexis"
+    byLabel.Text = "by brunojegue"
     byLabel.TextXAlignment = Enum.TextXAlignment.Center
     byLabel.TextYAlignment = Enum.TextYAlignment.Top
     byLabel.Parent = frame
@@ -804,7 +804,7 @@ local function createKeyInputFrame()
     subInfoLabel.TextWrapped = false
     subInfoLabel.TextXAlignment = Enum.TextXAlignment.Center
     subInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
-    subInfoLabel.Text = "Sistema de Key - Khalexis Hub"
+    subInfoLabel.Text = "Sistema de Key - Brunojegue Hub"
     subInfoLabel.Parent = frame
     spawn(function() local hue = 0; while frame and frame.Parent do hue = (hue + 0.01) % 1; infoLabel.TextColor3 = Color3.fromHSV(hue, 1, 1); wait(0.03) end end)
     ErrorLabel = Instance.new("TextLabel")
@@ -829,7 +829,7 @@ ToggleButton.Size = UDim2.new(0, 35, 0, 35)
 ToggleButton.Position = UDim2.new(0, 10, 0, 10)
 ToggleButton.BackgroundColor3 = Color3.new(0, 0, 0)
 ToggleButton.TextColor3 = Color3.new(1, 1, 1)
-ToggleButton.Text = "K"
+ToggleButton.Text = "B" -- Alterado de "K" para "B" para representar Brunojegue
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextSize = 24
 ToggleButton.Parent = ScreenGui
