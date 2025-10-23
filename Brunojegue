@@ -2,7 +2,7 @@
     -- Brunojegue Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
     -- Chaves válidas: "khalexispremium100", "khalexislindodms10"
     -- Mensagem de erro: "Key incorreta"
-    -- Toggle "K" branco em quadrado preto arredondado
+    -- Toggle "B" branco em quadrado preto arredondado
     -- Toggle aparece sempre visível, clicável e arrastável (mouse/touch)
 --]]
 
@@ -52,7 +52,7 @@ local ErrorLabel
 local HasShownWelcome = false
 
 local StorageKeyFileName = "BrunojegueHubKey.txt"
-local validKeys = {khalexispremium100 = true, khalexislindodms10 = true}
+local validKeys = {"khalexispremium100", "khalexislindodms10"}
 
 local function saveKeyLocally(key) pcall(function() if writefile then writefile(StorageKeyFileName, key) elseif write_file then write_file(StorageKeyFileName, key) end end) end
 local function loadKeyLocally() local s,c = pcall(function() if readfile then return readfile(StorageKeyFileName) elseif read_file then return read_file(StorageKeyFileName) end end); if s and c then return c:lower() end; return nil end
@@ -698,7 +698,7 @@ end
 
 local function validateKeyAndOpen(key, isAuto)
     local lowerKey = key:lower()
-    if validKeys[lowerKey] then
+    if table.find(validKeys, lowerKey) then
         saveKeyLocally(lowerKey)
         if KeyFrame and KeyFrame.Parent then KeyFrame:Destroy(); KeyFrame = nil end
         showLoadingAndOpenHub()
@@ -712,7 +712,7 @@ local function validateKeyAndOpen(key, isAuto)
     end
 end
 
-local function tryAutoValidate() local savedKey = loadKeyLocally(); if savedKey and validKeys[savedKey] then return validateKeyAndOpen(savedKey, true) else removeLocalKey(); return false end end
+local function tryAutoValidate() local savedKey = loadKeyLocally(); if savedKey and table.find(validKeys, savedKey) then return validateKeyAndOpen(savedKey, true) else removeLocalKey(); return false end end
 
 local function createKeyInputFrame()
     local frame = Instance.new("Frame")
