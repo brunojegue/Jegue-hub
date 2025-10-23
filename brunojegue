@@ -1,6 +1,6 @@
 --[[
     -- Brunojegue Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
-    -- Chaves válidas: "khalexispremium100", "khalexislindodms10"
+    -- Chaves válidas: "khalexispremium100", "brunojeguelindodms10"
     -- Mensagem de erro: "Key incorreta"
     -- Toggle "B" branco em quadrado preto arredondado
     -- Toggle aparece sempre visível, clicável e arrastável (mouse/touch)
@@ -52,11 +52,11 @@ local ErrorLabel
 local HasShownWelcome = false
 
 local StorageKeyFileName = "BrunojegueHubKey.txt"
-local validKeys = {"khalexispremium100", "khalexislindodms10"}
+local validKeys = {"khalexispremium100", "brunojeguelindodms10"}
 
 local function saveKeyLocally(key) pcall(function() if writefile then writefile(StorageKeyFileName, key) elseif write_file then write_file(StorageKeyFileName, key) end end) end
 local function loadKeyLocally() local s,c = pcall(function() if readfile then return readfile(StorageKeyFileName) elseif read_file then return read_file(StorageKeyFileName) end end); if s and c then return c:lower() end; return nil end
-local function removeLocalKey() pcall(function() if delfile then delfile(StorageKeyFileName)elseif deletefile then deletefile(StorageKeyFileName) end end) end
+local function removeLocalKey() pcall(function() if delfile then delfile(StorageKeyFileName) elseif deletefile then deletefile(StorageKeyFileName) end end) end
 
 local function showAutoMessage(msg) 
     local m = Instance.new("Frame"); m.Name="AutoMessageFrame"; m.Size=UDim2.new(0,320,0,45); m.Position=UDim2.new(1,-330,1,-55); m.BackgroundColor3=COLOR_BLACK; m.BorderSizePixel=0; m.Parent=ScreenGui; applyRoundedCorners(m,10); 
@@ -64,7 +64,7 @@ local function showAutoMessage(msg)
     spawn(function() wait(4); if m and m.Parent then m:Destroy() end end) 
 end
 local function showError(msg) if ErrorLabel then ErrorLabel.Text=msg; spawn(function() wait(2); if ErrorLabel and ErrorLabel.Parent then ErrorLabel.Text="" end end) end end
-local function copyToClipboard(text) return pcall(function() if setclipboard then setclipboard(text)elseif toclipboard then toclipboard(text) else error("Clipboard function not supported.") end end) end
+local function copyToClipboard(text) return pcall(function() if setclipboard then setclipboard(text) elseif toclipboard then toclipboard(text) else error("Clipboard function not supported.") end end) end
 
 local function closeHubWithAnimation(container)
     if not (container and container.Parent) then return end
@@ -233,7 +233,7 @@ local function createHub()
     local searchBox = Instance.new("TextBox")
     searchBox.Name = "CategorySearchBox"
     searchBox.Size = UDim2.new(0, 120, 0, 22)
-    searchBox.Position = UDim2.new(0, 5, 0, 50) -- Após TitleBar (40px) + 5px margem
+    searchBox.Position = UDim2.new(0, 5, 0, 50)
     searchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     searchBox.TextColor3 = COLOR_TEXT
     searchBox.PlaceholderText = "🔍 Pesquisar..."
@@ -255,12 +255,12 @@ local function createHub()
     searchBoxGradient.Parent = searchBoxBorder
     local categoryFrame = Instance.new("ScrollingFrame")
     categoryFrame.Name = "CategoryFrame"
-    categoryFrame.Size = UDim2.new(0, 120, 0, 168) -- Altura fixa de 168px (espaço disponível)
-    categoryFrame.Position = UDim2.new(0, 5, 0, 77) -- Após TitleBar (40px) + searchBox (22px) + 5px + 10px margem
+    categoryFrame.Size = UDim2.new(0, 120, 0, 168)
+    categoryFrame.Position = UDim2.new(0, 5, 0, 77)
     categoryFrame.BackgroundColor3 = COLOR_CATEGORY_BG
     categoryFrame.BorderSizePixel = 0
-    categoryFrame.ScrollBarThickness = 4 -- Barra de rolagem mais discreta
-    categoryFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 140, 0) -- Cor personalizada
+    categoryFrame.ScrollBarThickness = 4
+    categoryFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 140, 0)
     categoryFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
     categoryFrame.Parent = frame
     applyRoundedCorners(categoryFrame, 12)
@@ -288,7 +288,7 @@ local function createHub()
     layoutCategory.Parent = categoryContainer
     layoutCategory:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         categoryContainer.Size = UDim2.new(1, -10, 0, layoutCategory.AbsoluteContentSize.Y)
-        categoryFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(layoutCategory.AbsoluteContentSize.Y + 10, 200)) -- Garante scroll mínimo
+        categoryFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(layoutCategory.AbsoluteContentSize.Y + 10, 200))
     end)
     searchBox:GetPropertyChangedSignal("Text"):Connect(function()
         local s = searchBox.Text:lower()
@@ -301,8 +301,8 @@ local function createHub()
     end)
     local scriptFrame = Instance.new("ScrollingFrame")
     scriptFrame.Name = "ScriptFrame"
-    scriptFrame.Size = UDim2.new(1, -135, 0, 195) -- Altura ajustada para 195px (280px - 40px TitleBar - 45px Footer)
-    scriptFrame.Position = UDim2.new(0, 130, 0, 40) -- Começa após TitleBar
+    scriptFrame.Size = UDim2.new(1, -135, 0, 195)
+    scriptFrame.Position = UDim2.new(0, 130, 0, 40)
     scriptFrame.BackgroundColor3 = COLOR_BLACK
     scriptFrame.BorderSizePixel = 0
     scriptFrame.ScrollBarThickness = 4
@@ -351,7 +351,7 @@ local function createHub()
     local footerBackground = Instance.new("Frame")
     footerBackground.Name = "FooterBackground"
     footerBackground.Size = UDim2.new(1, -10, 0, 40)
-    footerBackground.Position = UDim2.new(0, 5, 1, -45) -- 5px acima do limite inferior
+    footerBackground.Position = UDim2.new(0, 5, 1, -45)
     footerBackground.BackgroundColor3 = COLOR_TITLEBAR
     footerBackground.BackgroundTransparency = 0
     footerBackground.BorderSizePixel = 0
@@ -579,6 +579,7 @@ local function createHub()
         {Text = "Nova Mensagem de Boas Vindas!", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "Correções de Bugs", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "Tamanho do Hub Editado", Color = Color3.fromRGB(220, 220, 220)},
+        {Text = "Nova Chave Não Premium: brunojeguelindodms10", Color = Color3.fromRGB(255, 140, 0), Font = Enum.Font.GothamBold},
         {Text = "DEIXE UMA SUGESTÃO NO DC!", Color = Color3.fromRGB(255, 140, 0), Font = Enum.Font.GothamBold},
     }
     local function displayUpdates()
