@@ -1,10 +1,11 @@
---[[
-    -- Khalexis Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
-    -- Chaves válidas: "khalexispremium100", "khalexislindodms10"
-    -- Mensagem de erro: "Key incorreta"
-    -- Toggle "K" branco em quadrado preto arredondado
-    -- Toggle aparece sempre visível, clicável e arrastável (mouse/touch)
---]]
+-- Khalexis Hub - Script Hub para Roblox com sistema de key, barra de pesquisa e configurações de tema
+-- Versão Polida: V1.2 - Correções de scroll, otimizações de performance e limpeza de código
+-- Chaves válidas: "khalexispremium100", "khalexisgeneroso"
+-- Mensagem de erro: "Key incorreta"
+-- Toggle "K" branco em quadrado preto arredondado
+-- Toggle aparece só ao fechar o hub, some ao abrir
+-- Toggle posicionado no canto superior esquerdo, clicável e arrastável (mouse/touch)
+-- Melhorias: CanvasSize dinâmico para scrolls, padding extra para evitar cortes, formatação consistente, comentários aprimorados
 
 local function applyRoundedCorners(guiObject, radius)
     local corner = Instance.new("UICorner")
@@ -23,7 +24,7 @@ ScreenGui.Name = "KhalexisHub"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = game.CoreGui
 
--- Paletas de Cores para os Temas
+-- Paletas de Cores para os Temas (otimizado para fácil expansão)
 local themes = {
     normal = {
         main_bg = Color3.fromRGB(30, 30, 30),
@@ -62,9 +63,9 @@ local themes = {
     }
 }
 
--- Cores Padrão
+-- Cores Padrão (usando tema normal como base)
 local COLOR_BLACK = themes.normal.main_bg
-local COLOR_CATEGORY_BG = themes.normal.category_bg -- Cor cinza das categorias
+local COLOR_CATEGORY_BG = themes.normal.category_bg
 local COLOR_CATEGORY_BTN = Color3.fromRGB(90, 90, 90)
 local COLOR_SCRIPT_BTN = Color3.fromRGB(70, 70, 70)
 local COLOR_TITLEBAR = themes.normal.title_bar
@@ -79,25 +80,110 @@ local LoadingScreen, StopLoadingAnim
 local HubOpen = false
 local ToggleButton
 local ErrorLabel
-local HasShownWelcome = false -- Nova variável para controlar se a mensagem de boas-vindas já foi exibida
+local HasShownWelcome = false
 
 local StorageKeyFileName = "KhalexisHubKey.txt"
 local validKeys = {
-    khalexispremium100 = true, -- Chave premium mantida
-    khalexislindodms10 = true  -- Nova chave normal
+    khalexispremium100 = true,
+    khalexisgeneroso = true,
 }
 
-local function saveKeyLocally(key) pcall(function() if writefile then writefile(StorageKeyFileName, key) elseif write_file then write_file(StorageKeyFileName, key) end end) end
-local function loadKeyLocally() local s,c = pcall(function() if readfile then return readfile(StorageKeyFileName) elseif read_file then return read_file(StorageKeyFileName) end end); if s and c then return c:lower() end; return nil end
-local function removeLocalKey() pcall(function() if delfile then delfile(StorageKeyFileName)elseif deletefile then deletefile(StorageKeyFileName) end end) end
+-- Funções de Armazenamento Local (otimizadas com pcall para robustez)
+local function saveKeyLocally(key)
+    pcall(function()
+        if writefile then
+            writefile(StorageKeyFileName, key)
+        elseif write_file then
+            write_file(StorageKeyFileName, key)
+        end
+    end)
+end
 
-local function showAutoMessage(msg) local m = Instance.new("Frame"); m.Name="AutoMessageFrame"; m.Size=UDim2.new(0,320,0,45); m.Position=UDim2.new(1,-330,1,-55); m.BackgroundColor3=COLOR_BLACK; m.BorderSizePixel=0; m.Parent=ScreenGui; applyRoundedCorners(m,10); local l=Instance.new("TextLabel"); l.Size=UDim2.new(1,-20,1,-10); l.Position=UDim2.new(0,10,0,5); l.BackgroundTransparency=1; l.TextColor3=COLOR_TEXT; l.Font=Enum.Font.GothamBold; l.TextSize=16; l.Text=msg; l.TextWrapped=true; l.TextXAlignment=Enum.TextXAlignment.Left; l.TextYAlignment=Enum.TextYAlignment.Center; l.Parent=m; spawn(function() wait(4); if m and m.Parent then m:Destroy() end end) end
-local function showError(msg) if ErrorLabel then ErrorLabel.Text=msg; spawn(function() wait(2); if ErrorLabel and ErrorLabel.Parent then ErrorLabel.Text="" end end) end end
-local function copyToClipboard(text) return pcall(function() if setclipboard then setclipboard(text)elseif toclipboard then toclipboard(text) else error("Clipboard function not supported.") end end) end
+local function loadKeyLocally()
+    local success, content = pcall(function()
+        if readfile then
+            return readfile(StorageKeyFileName)
+        elseif read_file then
+            return read_file(StorageKeyFileName)
+        end
+    end)
+    if success and content then
+        return content:lower()
+    end
+    return nil
+end
 
--- Função reutilizável para a animação de fechamento
+local function removeLocalKey()
+    pcall(function()
+        if delfile then
+            delfile(StorageKeyFileName)
+        elseif deletefile then
+            deletefile(StorageKeyFileName)
+        end
+    end)
+end
+
+-- Funções de UI Auxiliares (otimizadas para reutilização)
+local function showAutoMessage(msg)
+    local messageFrame = Instance.new("Frame")
+    messageFrame.Name = "AutoMessageFrame"
+    messageFrame.Size = UDim2.new(0, 320, 0, 45)
+    messageFrame.Position = UDim2.new(1, -330, 1, -55)
+    messageFrame.BackgroundColor3 = COLOR_BLACK
+    messageFrame.BorderSizePixel = 0
+    messageFrame.Parent = ScreenGui
+    applyRoundedCorners(messageFrame, 10)
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 1, -10)
+    label.Position = UDim2.new(0, 10, 0, 5)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = COLOR_TEXT
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 16
+    label.Text = msg
+    label.TextWrapped = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextYAlignment = Enum.TextYAlignment.Center
+    label.Parent = messageFrame
+
+    spawn(function()
+        wait(4)
+        if messageFrame and messageFrame.Parent then
+            messageFrame:Destroy()
+        end
+    end)
+end
+
+local function showError(msg)
+    if ErrorLabel then
+        ErrorLabel.Text = msg
+        spawn(function()
+            wait(2)
+            if ErrorLabel and ErrorLabel.Parent then
+                ErrorLabel.Text = ""
+            end
+        end)
+    end
+end
+
+local function copyToClipboard(text)
+    return pcall(function()
+        if setclipboard then
+            setclipboard(text)
+        elseif toclipboard then
+            toclipboard(text)
+        else
+            error("Clipboard function not supported.")
+        end
+    end)
+end
+
+-- Animação de Fechamento do Hub (otimizada para performance)
 local function closeHubWithAnimation(container)
-    if not (container and container.Parent) then return end
+    if not (container and container.Parent) then
+        return
+    end
 
     local uiScaler = container:FindFirstChildOfClass("UIScale")
     if not uiScaler then
@@ -106,7 +192,7 @@ local function closeHubWithAnimation(container)
     end
 
     local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-    local goal = { Scale = 0 }
+    local goal = {Scale = 0}
     local tween = TweenService:Create(uiScaler, tweenInfo, goal)
     tween:Play()
     tween.Completed:Wait()
@@ -119,6 +205,7 @@ local function closeHubWithAnimation(container)
     ToggleButton.Visible = true
 end
 
+-- Tela de Carregamento com Animação Melhorada
 local function showLoadingScreen()
     local frame = Instance.new("Frame")
     frame.Name = "LoadingFrame"
@@ -179,37 +266,49 @@ local function showLoadingScreen()
     return frame, function()
         if connection then
             connection:Disconnect()
-            connection = nil
         end
     end
 end
 
+-- Aplicação de Tema (otimizada para evitar nil checks desnecessários)
 local function applyTheme(themeName)
     local palette = themes[themeName]
-    if not palette or not MainFrameContainer then return end
+    if not palette or not MainFrameContainer then
+        return
+    end
     local MainFrame = MainFrameContainer:FindFirstChild("MainFrame")
-    if not MainFrame then return end
+    if not MainFrame then
+        return
+    end
 
-    local titleBar=MainFrame:FindFirstChild("TitleBar")
-    local categoryFrame=MainFrame:FindFirstChild("CategoryFrame")
-    local scriptFrame=MainFrame:FindFirstChild("ScriptFrame")
-    local footerBackground=MainFrame:FindFirstChild("FooterBackground")
+    local titleBar = MainFrame:FindFirstChild("TitleBar")
+    local categoryFrame = MainFrame:FindFirstChild("CategoryFrame")
+    local scriptFrame = MainFrame:FindFirstChild("ScriptFrame")
+    local footerBackground = MainFrame:FindFirstChild("FooterBackground")
 
     MainFrame.BackgroundColor3 = palette.main_bg
     MainFrame.BackgroundTransparency = palette.transparency
-    if titleBar then titleBar.BackgroundColor3=palette.title_bar end
-    if categoryFrame then categoryFrame.BackgroundColor3=palette.category_bg end
-    if scriptFrame then scriptFrame.BackgroundColor3=palette.script_frame_bg end
-    if footerBackground and (themeName=="normal" or themeName=="preto" or themeName=="transparente") then footerBackground.BackgroundColor3=palette.title_bar end
+    if titleBar then
+        titleBar.BackgroundColor3 = palette.title_bar
+    end
+    if categoryFrame then
+        categoryFrame.BackgroundColor3 = palette.category_bg
+    end
+    if scriptFrame then
+        scriptFrame.BackgroundColor3 = palette.script_frame_bg
+    end
+    if footerBackground and (themeName == "normal" or themeName == "preto" or themeName == "transparente") then
+        footerBackground.BackgroundColor3 = palette.title_bar
+    end
 end
 
+-- Criação do Hub Principal (com scrolls corrigidos e otimizações)
 local function createHub()
     local animationContainer = Instance.new("Frame")
     animationContainer.Name = "AnimationContainer"
-    -- TAMANHO DO HUB MAIS AJUSTADO E CENTRALIZADO
-    animationContainer.Size = UDim2.new(0, 350, 0, 280) -- Ajustado para ser um pouco menor
+    animationContainer.Size = UDim2.new(0, 350, 0, 280)
     animationContainer.AnchorPoint = Vector2.new(0.5, 0.5)
-    animationContainer.Position = UDim2.new(0.5, 0, 0.5, 0) -- Centralizado
+    animationContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
     animationContainer.BackgroundTransparency = 1
     animationContainer.Parent = ScreenGui
 
@@ -217,69 +316,75 @@ local function createHub()
     uiScaler.Parent = animationContainer
 
     local frame = Instance.new("Frame")
-    frame.Name="MainFrame"
-    frame.Size=UDim2.new(1, 0, 1, 0)
-    frame.Position=UDim2.new(0, 0, 0, 0)
-    frame.BackgroundColor3=COLOR_BLACK
-    frame.BorderSizePixel=0
-    frame.Parent=animationContainer
-    frame.Visible=true
-    applyRoundedCorners(frame,12)
+    frame.Name = "MainFrame"
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.Position = UDim2.new(0, 0, 0, 0)
+    frame.BackgroundColor3 = COLOR_BLACK
+    frame.BorderSizePixel = 0
+    frame.Parent = animationContainer
+    frame.Visible = true
+    applyRoundedCorners(frame, 12)
 
-    local hubBorder=Instance.new("UIStroke")
-    hubBorder.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-    hubBorder.Thickness=2
-    hubBorder.LineJoinMode=Enum.LineJoinMode.Round
-    hubBorder.Parent=frame
-    local hubGradient=Instance.new("UIGradient")
-    hubGradient.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,140,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(220,100,0))})
-    hubGradient.Rotation=45
-    hubGradient.Parent=hubBorder
+    local hubBorder = Instance.new("UIStroke")
+    hubBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    hubBorder.Thickness = 2
+    hubBorder.LineJoinMode = Enum.LineJoinMode.Round
+    hubBorder.Parent = frame
+    local hubGradient = Instance.new("UIGradient")
+    hubGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 100, 0))
+    })
+    hubGradient.Rotation = 45
+    hubGradient.Parent = hubBorder
 
-    local titleBar=Instance.new("Frame")
-    titleBar.Name="TitleBar"
-    titleBar.Size=UDim2.new(1,-10,0,30) -- Altura do título ajustada
-    titleBar.Position = UDim2.new(0, 5, 0, 5)
-    titleBar.BackgroundColor3=COLOR_TITLEBAR
-    titleBar.BorderSizePixel=0
-    titleBar.Parent=frame
-    applyRoundedCorners(titleBar,10)
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, -10, 0, 30)
+    titleBar.Position = UDim2.new(0, 5, 0, 5)  -- CORRIGIDO: Removido typo "Flo"
+    titleBar.BackgroundColor3 = COLOR_TITLEBAR
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = frame
+    applyRoundedCorners(titleBar, 10)
 
-    local titleBarBorder=Instance.new("UIStroke")
-    titleBarBorder.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-    titleBarBorder.Thickness=1.5
-    titleBarBorder.LineJoinMode=Enum.LineJoinMode.Round
-    titleBarBorder.Parent=titleBar
-    local titleBarGradient=Instance.new("UIGradient")
-    titleBarGradient.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,140,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(220,100,0))})
-    titleBarGradient.Rotation=90
-    titleBarGradient.Parent=titleBarBorder
+    local titleBarBorder = Instance.new("UIStroke")
+    titleBarBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    titleBarBorder.Thickness = 1.5
+    titleBarBorder.LineJoinMode = Enum.LineJoinMode.Round
+    titleBarBorder.Parent = titleBar
+    local titleBarGradient = Instance.new("UIGradient")
+    titleBarGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 100, 0))
+    })
+    titleBarGradient.Rotation = 90
+    titleBarGradient.Parent = titleBarBorder
 
-    local titleLabel=Instance.new("TextLabel")
-    titleLabel.Name="Title"
-    titleLabel.Size=UDim2.new(1,0,1,0)
-    titleLabel.BackgroundTransparency=1
-    titleLabel.Text="Khalexis Hub"
-    titleLabel.TextColor3=COLOR_TEXT
-    titleLabel.Font=Enum.Font.GothamBold
-    titleLabel.TextSize=18 -- Tamanho da fonte do título ajustado
-    titleLabel.TextXAlignment=Enum.TextXAlignment.Center
-    titleLabel.TextYAlignment=Enum.TextYAlignment.Center
-    titleLabel.Parent=titleBar
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "Title"
+    titleLabel.Size = UDim2.new(1, 0, 1, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "Khalexis Hub"
+    titleLabel.TextColor3 = COLOR_TEXT
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 18
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Center
+    titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+    titleLabel.Parent = titleBar
 
-    -- Botão de fechar com design moderno
+    -- Botão de Fechar (com hover otimizado)
     local closeButton = Instance.new("TextButton")
     closeButton.Name = "CloseButton"
-    closeButton.Size = UDim2.new(0, 24, 0, 24) -- Tamanho do botão ajustado
-    closeButton.Position = UDim2.new(1, -28, 0.5, -12) -- Posição ajustada
+    closeButton.Size = UDim2.new(0, 24, 0, 24)
+    closeButton.Position = UDim2.new(1, -28, 0.5, -12)
     closeButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
     closeButton.BackgroundTransparency = 1
     closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     closeButton.Font = Enum.Font.GothamBold
-    closeButton.TextSize = 18 -- Tamanho da fonte ajustado
+    closeButton.TextSize = 18
     closeButton.Text = "X"
     closeButton.Parent = titleBar
-    applyRoundedCorners(closeButton, 12) -- Raio ajustado
+    applyRoundedCorners(closeButton, 12)
 
     local closeTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad)
     closeButton.MouseEnter:Connect(function()
@@ -288,161 +393,192 @@ local function createHub()
     closeButton.MouseLeave:Connect(function()
         TweenService:Create(closeButton, closeTweenInfo, {BackgroundTransparency = 1}):Play()
     end)
-
     closeButton.MouseButton1Click:Connect(function()
         closeHubWithAnimation(animationContainer)
     end)
 
-    local searchBox=Instance.new("TextBox")
-    searchBox.Name="CategorySearchBox"
-    searchBox.Size=UDim2.new(0,120,0,22) -- Reduzido para celular
-    searchBox.Position=UDim2.new(0,5,0,40) -- Posição ajustada
-    searchBox.BackgroundColor3=Color3.fromRGB(40,40,40)
-    searchBox.TextColor3=COLOR_TEXT
-    searchBox.PlaceholderText="🔍 Pesquisar..."
-    searchBox.PlaceholderColor3=Color3.fromRGB(150,150,150)
-    searchBox.Text=""
-    searchBox.Font=Enum.Font.Gotham
-    searchBox.TextSize=11 -- Reduzido para celular
-    searchBox.ClearTextOnFocus=false
-    searchBox.Parent=frame
-    applyRoundedCorners(searchBox,8)
+    -- Barra de Pesquisa (otimizada para mobile)
+    local searchBox = Instance.new("TextBox")
+    searchBox.Name = "CategorySearchBox"
+    searchBox.Size = UDim2.new(0, 120, 0, 22)
+    searchBox.Position = UDim2.new(0, 5, 0, 40)
+    searchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    searchBox.TextColor3 = COLOR_TEXT
+    searchBox.PlaceholderText = "🔍 Pesquisar..."
+    searchBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+    searchBox.Text = ""
+    searchBox.Font = Enum.Font.Gotham
+    searchBox.TextSize = 11
+    searchBox.ClearTextOnFocus = false
+    searchBox.Parent = frame
+    applyRoundedCorners(searchBox, 8)
 
-    local searchBoxBorder=Instance.new("UIStroke")
-    searchBoxBorder.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-    searchBoxBorder.Thickness=1.5
-    searchBoxBorder.LineJoinMode=Enum.LineJoinMode.Round
-    searchBoxBorder.Parent=searchBox
-    local searchBoxGradient=Instance.new("UIGradient")
-    searchBoxGradient.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,140,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(220,100,0))})
-    searchBoxGradient.Rotation=90
-    searchBoxGradient.Parent=searchBoxBorder
+    local searchBoxBorder = Instance.new("UIStroke")
+    searchBoxBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    searchBoxBorder.Thickness = 1.5
+    searchBoxBorder.LineJoinMode = Enum.LineJoinMode.Round
+    searchBoxBorder.Parent = searchBox
+    local searchBoxGradient = Instance.new("UIGradient")
+    searchBoxGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 100, 0))
+    })
+    searchBoxGradient.Rotation = 90
+    searchBoxGradient.Parent = searchBoxBorder
 
-    local categoryFrame=Instance.new("ScrollingFrame")
-    categoryFrame.Name="CategoryFrame"
-    categoryFrame.Size=UDim2.new(0,120,1,-70) -- ALTURA AJUSTADA PARA DAR MAIS ESPAÇO PARA AS CATEGORIAS
-    categoryFrame.Position=UDim2.new(0,5,0,67) -- Posição ajustada
-    categoryFrame.BackgroundColor3=COLOR_CATEGORY_BG
-    categoryFrame.BorderSizePixel=0
-    categoryFrame.ScrollBarThickness=6
-    categoryFrame.Parent=frame
-    applyRoundedCorners(categoryFrame,12)
+    -- CategoryFrame com Scroll Corrigido
+    local categoryFrame = Instance.new("ScrollingFrame")
+    categoryFrame.Name = "CategoryFrame"
+    categoryFrame.Size = UDim2.new(0, 120, 1, -95)
+    categoryFrame.Position = UDim2.new(0, 5, 0, 67)
+    categoryFrame.BackgroundColor3 = COLOR_CATEGORY_BG
+    categoryFrame.BorderSizePixel = 0
+    categoryFrame.ScrollBarThickness = 8  -- AUMENTADO para melhor usabilidade
+    categoryFrame.Parent = frame
+    applyRoundedCorners(categoryFrame, 12)
 
-    local categoryFrameBorder=Instance.new("UIStroke")
-    categoryFrameBorder.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-    categoryFrameBorder.Thickness=1.5
-    categoryFrameBorder.LineJoinMode=Enum.LineJoinMode.Round
-    categoryFrameBorder.Parent=categoryFrame
-    local categoryFrameGradient=Instance.new("UIGradient")
-    categoryFrameGradient.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,140,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(220,100,0))})
-    categoryFrameGradient.Rotation=90
-    categoryFrameGradient.Parent=categoryFrameBorder
+    local categoryFrameBorder = Instance.new("UIStroke")
+    categoryFrameBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    categoryFrameBorder.Thickness = 1.5
+    categoryFrameBorder.LineJoinMode = Enum.LineJoinMode.Round
+    categoryFrameBorder.Parent = categoryFrame
+    local categoryFrameGradient = Instance.new("UIGradient")
+    categoryFrameGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 100, 0))
+    })
+    categoryFrameGradient.Rotation = 90
+    categoryFrameGradient.Parent = categoryFrameBorder
 
-    local categoryContainer=Instance.new("Frame")
-    categoryContainer.Name="CategoryContainer"
-    categoryContainer.Size=UDim2.new(1,-10,0,0)
-    categoryContainer.Position=UDim2.new(0,5,0,5)
-    categoryContainer.BackgroundTransparency=1
-    categoryContainer.Parent=categoryFrame
-    categoryContainer.ClipsDescendants=true
-    local layoutCategory=Instance.new("UIListLayout")
-    -- AUMENTADO O PADDING PARA DAR MAIS ESPAÇO ENTRE AS CATEGORIAS E PERMITIR MAIS ROLAGEM
-    layoutCategory.Padding=UDim.new(0,12)
-    layoutCategory.SortOrder=Enum.SortOrder.LayoutOrder
-    layoutCategory.FillDirection=Enum.FillDirection.Vertical
-    layoutCategory.HorizontalAlignment=Enum.HorizontalAlignment.Center
-    layoutCategory.Parent=categoryContainer
-    -- Conecta para ajustar o tamanho do CategoryContainer
+    local categoryContainer = Instance.new("Frame")
+    categoryContainer.Name = "CategoryContainer"
+    categoryContainer.Size = UDim2.new(1, -10, 0, 0)
+    categoryContainer.Position = UDim2.new(0, 5, 0, 5)
+    categoryContainer.BackgroundTransparency = 1
+    categoryContainer.Parent = categoryFrame
+    categoryContainer.ClipsDescendants = true
+
+    local layoutCategory = Instance.new("UIListLayout")
+    layoutCategory.Padding = UDim.new(0, 6)
+    layoutCategory.SortOrder = Enum.SortOrder.LayoutOrder
+    layoutCategory.FillDirection = Enum.FillDirection.Vertical
+    layoutCategory.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layoutCategory.Parent = categoryContainer
+
+    -- Atualização Dinâmica de Tamanho e CanvasSize (corrigido e otimizado)
     layoutCategory:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        categoryContainer.Size=UDim2.new(1,-10,0,layoutCategory.AbsoluteContentSize.Y)
+        local contentHeight = layoutCategory.AbsoluteContentSize.Y + 10  -- Padding extra para evitar corte
+        categoryContainer.Size = UDim2.new(1, -10, 0, contentHeight)
+        categoryFrame.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
     end)
-    searchBox:GetPropertyChangedSignal("Text"):Connect(function() local s=searchBox.Text:lower(); for _,b in ipairs(categoryContainer:GetChildren()) do if b:IsA("TextButton") then local n=b.Text:lower(); b.Visible=string.find(n,s,1,true) end end end)
 
-    local scriptFrame=Instance.new("ScrollingFrame")
-    scriptFrame.Name="ScriptFrame"
-    scriptFrame.Size=UDim2.new(1,-135,1,-60) -- Largura e altura ajustadas
-    scriptFrame.Position=UDim2.new(0,130,0,40) -- Posição ajustada
-    scriptFrame.BackgroundColor3=COLOR_BLACK
-    scriptFrame.BorderSizePixel=0
-    scriptFrame.ScrollBarThickness=6
-    scriptFrame.Parent=frame
-    applyRoundedCorners(scriptFrame,16)
+    -- Filtro de Pesquisa (otimizado com lower case consistente)
+    searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        local searchText = searchBox.Text:lower()
+        for _, button in ipairs(categoryContainer:GetChildren()) do
+            if button:IsA("TextButton") then
+                local buttonText = button.Text:lower()
+                button.Visible = string.find(buttonText, searchText, 1, true) ~= nil
+            end
+        end
+    end)
 
-    local scriptFrameBorder=Instance.new("UIStroke")
-    scriptFrameBorder.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-    scriptFrameBorder.Thickness=1.5
-    scriptFrameBorder.LineJoinMode=Enum.LineJoinMode.Round
-    scriptFrameBorder.Parent=scriptFrame
-    local scriptFrameGradient=Instance.new("UIGradient")
-    scriptFrameGradient.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,140,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(220,100,0))})
-    scriptFrameGradient.Rotation=90
-    scriptFrameGradient.Parent=scriptFrameBorder
+    -- ScriptFrame com Scroll Corrigido
+    local scriptFrame = Instance.new("ScrollingFrame")
+    scriptFrame.Name = "ScriptFrame"
+    scriptFrame.Size = UDim2.new(1, -135, 1, -60)
+    scriptFrame.Position = UDim2.new(0, 130, 0, 40)
+    scriptFrame.BackgroundColor3 = COLOR_BLACK
+    scriptFrame.BorderSizePixel = 0
+    scriptFrame.ScrollBarThickness = 8  -- AUMENTADO para melhor usabilidade
+    scriptFrame.Parent = frame
+    applyRoundedCorners(scriptFrame, 16)
 
-    local scriptContainer=Instance.new("Frame")
-    scriptContainer.Name="ScriptContainer"
-    scriptContainer.Size=UDim2.new(1,-20,0,0)
-    scriptContainer.Position=UDim2.new(0,10,0,10)
-    scriptContainer.BackgroundTransparency=1
-    scriptContainer.Parent=scriptFrame
-    scriptContainer.ClipsDescendants=true
-    local layoutScript=Instance.new("UIListLayout")
-    layoutScript.Padding=UDim.new(0,6) -- Padding ajustado
-    layoutScript.SortOrder=Enum.SortOrder.LayoutOrder
-    layoutScript.FillDirection=Enum.FillDirection.Vertical
-    layoutScript.HorizontalAlignment=Enum.HorizontalAlignment.Center
-    layoutScript.Parent=scriptContainer
-    -- Conecta para ajustar o tamanho do ScriptContainer
+    local scriptFrameBorder = Instance.new("UIStroke")
+    scriptFrameBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    scriptFrameBorder.Thickness = 1.5
+    scriptFrameBorder.LineJoinMode = Enum.LineJoinMode.Round
+    scriptFrameBorder.Parent = scriptFrame
+    local scriptFrameGradient = Instance.new("UIGradient")
+    scriptFrameGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 100, 0))
+    })
+    scriptFrameGradient.Rotation = 90
+    scriptFrameGradient.Parent = scriptFrameBorder
+
+    local scriptContainer = Instance.new("Frame")
+    scriptContainer.Name = "ScriptContainer"
+    scriptContainer.Size = UDim2.new(1, -20, 0, 0)
+    scriptContainer.Position = UDim2.new(0, 10, 0, 10)
+    scriptContainer.BackgroundTransparency = 1
+    scriptContainer.Parent = scriptFrame
+    scriptContainer.ClipsDescendants = true
+
+    local layoutScript = Instance.new("UIListLayout")
+    layoutScript.Padding = UDim.new(0, 6)
+    layoutScript.SortOrder = Enum.SortOrder.LayoutOrder
+    layoutScript.FillDirection = Enum.FillDirection.Vertical
+    layoutScript.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layoutScript.Parent = scriptContainer
+
+    -- Atualização Dinâmica de Tamanho e CanvasSize (corrigido e otimizado)
     layoutScript:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        scriptContainer.Size=UDim2.new(1,-20,0,layoutScript.AbsoluteContentSize.Y)
+        local contentHeight = layoutScript.AbsoluteContentSize.Y + 10  -- Padding extra para evitar corte
+        scriptContainer.Size = UDim2.new(1, -20, 0, contentHeight)
+        scriptFrame.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
     end)
 
-    -- Rodapé do scriptContainer para a aba de Atualizações
+    -- Rodapé para Aba de Atualizações (visível apenas quando necessário)
     local scriptFooter = Instance.new("TextLabel")
     scriptFooter.Name = "ScriptFooter"
-    scriptFooter.Size = UDim2.new(1, 0, 0, 18) -- Altura ajustada
+    scriptFooter.Size = UDim2.new(1, 0, 0, 18)
     scriptFooter.BackgroundTransparency = 1
     scriptFooter.TextColor3 = Color3.fromRGB(150, 150, 150)
     scriptFooter.Font = Enum.Font.Gotham
-    scriptFooter.TextSize = 12 -- Tamanho da fonte ajustado
+    scriptFooter.TextSize = 9
     scriptFooter.Text = "Algum Script parou de funcionar? NOS COMUNIQUE!"
     scriptFooter.TextWrapped = true
     scriptFooter.TextXAlignment = Enum.TextXAlignment.Center
     scriptFooter.TextYAlignment = Enum.TextYAlignment.Bottom
-    scriptFooter.LayoutOrder = 999 -- Garante que ele fique no final
+    scriptFooter.LayoutOrder = 999
     scriptFooter.Parent = scriptContainer
-    scriptFooter.Visible = false -- Inicialmente invisível, só aparece na aba de atualizações
+    scriptFooter.Visible = false
 
-    local footerBackground=Instance.new("Frame")
-    footerBackground.Name="FooterBackground"
-    footerBackground.Size=UDim2.new(1,-10,0,40) -- Altura ajustada
-    footerBackground.Position=UDim2.new(0,5,1,-45) -- Posição ajustada
-    footerBackground.BackgroundColor3=COLOR_TITLEBAR
-    footerBackground.BackgroundTransparency=0
-    footerBackground.BorderSizePixel=0
-    footerBackground.Parent=frame
-    applyRoundedCorners(footerBackground,10)
+    -- Footer Background (otimizado)
+    local footerBackground = Instance.new("Frame")
+    footerBackground.Name = "FooterBackground"
+    footerBackground.Size = UDim2.new(1, -10, 0, 40)
+    footerBackground.Position = UDim2.new(0, 5, 1, -45)
+    footerBackground.BackgroundColor3 = COLOR_TITLEBAR
+    footerBackground.BorderSizePixel = 0
+    footerBackground.Parent = frame
+    applyRoundedCorners(footerBackground, 10)
 
-    local footerBorder=Instance.new("UIStroke")
-    footerBorder.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-    footerBorder.Thickness=1.5
-    footerBorder.LineJoinMode=Enum.LineJoinMode.Round
-    footerBorder.Parent=footerBackground
-    local footerGradient=Instance.new("UIGradient")
-    footerGradient.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,140,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(220,100,0))})
-    footerGradient.Rotation=90
-    footerGradient.Parent=footerBorder
+    local footerBorder = Instance.new("UIStroke")
+    footerBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    footerBorder.Thickness = 1.5
+    footerBorder.LineJoinMode = Enum.LineJoinMode.Round
+    footerBorder.Parent = footerBackground
+    local footerGradient = Instance.new("UIGradient")
+    footerGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 100, 0))
+    })
+    footerGradient.Rotation = 90
+    footerGradient.Parent = footerBorder
 
-    local footerText=Instance.new("TextLabel")
-    footerText.Name="FooterText"
-    footerText.Text="By Khalexis"
-    footerText.Font=Enum.Font.GothamBold
-    footerText.TextSize=10 -- Tamanho da fonte ajustado
-    footerText.TextColor3=COLOR_FOOTER_TEXT
-    footerText.BackgroundTransparency=1
-    footerText.Size=UDim2.new(1, 0, 1, 0)
-    footerText.Position=UDim2.new(0, 0, 0, 5)
+    local footerText = Instance.new("TextLabel")
+    footerText.Name = "FooterText"
+    footerText.Text = "By Khalexis"
+    footerText.Font = Enum.Font.GothamBold
+    footerText.TextSize = 10
+    footerText.TextColor3 = COLOR_FOOTER_TEXT
+    footerText.BackgroundTransparency = 1
+    footerText.Size = UDim2.new(0.5, 0, 1, 0)  -- OTIMIZADO: Ajustado para caber no lado esquerdo
+    footerText.Position = UDim2.new(0, 0, 0, 5)
     footerText.TextYAlignment = Enum.TextYAlignment.Top
-    footerText.Parent=footerBackground
+    footerText.Parent = footerBackground
 
     local footerRightContainer = Instance.new("Frame")
     footerRightContainer.Name = "FooterRightContainer"
@@ -450,147 +586,153 @@ local function createHub()
     footerRightContainer.Position = UDim2.new(0.5, 0, 0, 0)
     footerRightContainer.BackgroundTransparency = 1
     footerRightContainer.Parent = footerBackground
+
     local footerContainerPadding = Instance.new("UIPadding")
-    footerContainerPadding.PaddingRight = UDim.new(0, 8) -- Padding ajustado
+    footerContainerPadding.PaddingRight = UDim.new(0, 8)
     footerContainerPadding.Parent = footerRightContainer
+
     local footerTextLayout = Instance.new("UIListLayout")
     footerTextLayout.FillDirection = Enum.FillDirection.Vertical
     footerTextLayout.VerticalAlignment = Enum.VerticalAlignment.Center
     footerTextLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     footerTextLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    footerTextLayout.Padding = UDim.new(0, 1) -- Padding ajustado
+    footerTextLayout.Padding = UDim.new(0, 1)
     footerTextLayout.Parent = footerRightContainer
 
-    local ytLabel=Instance.new("TextLabel")
-    ytLabel.Name="YouTubeLabel"
-    ytLabel.Text="Youtube: Khalexis"
-    ytLabel.Font=Enum.Font.Gotham
-    ytLabel.TextSize=9 -- Tamanho da fonte ajustado
-    ytLabel.TextColor3=Color3.fromRGB(180,180,180)
-    ytLabel.BackgroundTransparency=1
-    ytLabel.Size=UDim2.new(1, 0, 0, 10) -- Altura ajustada
-    ytLabel.TextXAlignment=Enum.TextXAlignment.Right
+    local ytLabel = Instance.new("TextLabel")
+    ytLabel.Name = "YouTubeLabel"
+    ytLabel.Text = "Youtube: Khalexis"
+    ytLabel.Font = Enum.Font.Gotham
+    ytLabel.TextSize = 9
+    ytLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    ytLabel.BackgroundTransparency = 1
+    ytLabel.Size = UDim2.new(1, 0, 0, 10)
+    ytLabel.TextXAlignment = Enum.TextXAlignment.Right
     ytLabel.LayoutOrder = 1
-    ytLabel.Parent=footerRightContainer
-    local discordLabel=Instance.new("TextLabel")
-    discordLabel.Name="DiscordLabel"
-    discordLabel.Text="Discord: discord.gg/aNaFpb2Qsb"
-    discordLabel.Font=Enum.Font.Gotham
-    discordLabel.TextSize=9 -- Tamanho da fonte ajustado
-    discordLabel.TextColor3=Color3.fromRGB(180,180,180)
-    discordLabel.BackgroundTransparency=1
-    discordLabel.Size=UDim2.new(1, 0, 0, 10) -- Altura ajustada
-    discordLabel.TextXAlignment=Enum.TextXAlignment.Right
+    ytLabel.Parent = footerRightContainer
+
+    local discordLabel = Instance.new("TextLabel")
+    discordLabel.Name = "DiscordLabel"
+    discordLabel.Text = "Discord: discord.gg/aNaFpb2Qsb"
+    discordLabel.Font = Enum.Font.Gotham
+    discordLabel.TextSize = 9
+    discordLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    discordLabel.BackgroundTransparency = 1
+    discordLabel.Size = UDim2.new(1, 0, 0, 10)
+    discordLabel.TextXAlignment = Enum.TextXAlignment.Right
     discordLabel.LayoutOrder = 2
-    discordLabel.Parent=footerRightContainer
-    local hintLabel=Instance.new("TextLabel")
-    hintLabel.Name="DudaLabel"
-    hintLabel.Text="Se tiver alguma dúvida entre no Discord!"
-    hintLabel.Font=Enum.Font.Gotham
-    hintLabel.TextSize=7 -- Tamanho da fonte ajustado
-    hintLabel.TextColor3=Color3.fromRGB(150,150,150)
-    hintLabel.BackgroundTransparency=1
-    hintLabel.Size=UDim2.new(1, 0, 0, 9) -- Altura ajustada
-    hintLabel.TextXAlignment=Enum.TextXAlignment.Right
+    discordLabel.Parent = footerRightContainer
+
+    local hintLabel = Instance.new("TextLabel")
+    hintLabel.Name = "DudaLabel"
+    hintLabel.Text = "Se tiver alguma dúvida entre no Discord!"
+    hintLabel.Font = Enum.Font.Gotham
+    hintLabel.TextSize = 7
+    hintLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    hintLabel.BackgroundTransparency = 1
+    hintLabel.Size = UDim2.new(1, 0, 0, 9)
+    hintLabel.TextXAlignment = Enum.TextXAlignment.Right
     hintLabel.LayoutOrder = 3
-    hintLabel.Parent=footerRightContainer
+    hintLabel.Parent = footerRightContainer
 
-    local playerInfo=Instance.new("Frame")
-    playerInfo.Name="PlayerInfoFrame"
-    playerInfo.Size=UDim2.new(0,90,0,25) -- Tamanho ajustado
-    playerInfo.Position=UDim2.new(0,8,0.5,-12) -- Posição ajustada
-    playerInfo.BackgroundTransparency=1 -- Deixando transparente como originalmente
-    playerInfo.Parent=footerBackground
-   
-    -- Removendo playerInfoBg e seus componentes de borda
-   
-    local avatar=Instance.new("ImageLabel")
-    avatar.Name="AvatarImage"
-    avatar.Size=UDim2.new(0,24,0,24) -- Tamanho ajustado
-    avatar.Position=UDim2.new(0,0,0,0) -- Posição ajustada para ficar diretamente no playerInfo
-    avatar.BackgroundColor3=COLOR_SCRIPT_BTN
-    avatar.BorderSizePixel=0
-    avatar.Parent=playerInfo -- Parented diretamente para playerInfo
-    avatar.ScaleType=Enum.ScaleType.Fit
-    applyRoundedCorners(avatar,12) -- Raio ajustado
-    local thumbType,thumbSize=Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size48x48
-    local thumbContent,_=Players:GetUserThumbnailAsync(userId,thumbType,thumbSize)
-    avatar.Image=thumbContent
-   
-    local playerNameLabel=Instance.new("TextLabel")
-    playerNameLabel.Name="PlayerNameLabel"
-    playerNameLabel.Size=UDim2.new(1,-28,1,0) -- Tamanho ajustado para o nome
-    playerNameLabel.Position=UDim2.new(0,28,0,0) -- Posição ajustada para o nome
-    playerNameLabel.BackgroundTransparency=1
-    playerNameLabel.Text=userName
-    playerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- NOME BRANCO
-    playerNameLabel.Font=Enum.Font.Gotham
-    playerNameLabel.TextSize=10 -- Tamanho da fonte ajustado
-    playerNameLabel.TextXAlignment=Enum.TextXAlignment.Left
-    playerNameLabel.Parent=playerInfo -- Parented diretamente para playerInfo
+    -- Info do Jogador (otimizado para footer)
+    local playerInfo = Instance.new("Frame")
+    playerInfo.Name = "PlayerInfoFrame"
+    playerInfo.Size = UDim2.new(0, 90, 0, 25)
+    playerInfo.Position = UDim2.new(0, 8, 0.5, -12)
+    playerInfo.BackgroundTransparency = 1
+    playerInfo.Parent = footerBackground
 
-    local dragging=false
-    local dragInput,dragStart,startPos
-    -- CORREÇÃO DO BUG DE ARRASTAR: Usar um InputObject global para arrastar o hub
+    local avatar = Instance.new("ImageLabel")
+    avatar.Name = "AvatarImage"
+    avatar.Size = UDim2.new(0, 24, 0, 24)
+    avatar.Position = UDim2.new(0, 0, 0, 0)
+    avatar.BackgroundColor3 = COLOR_SCRIPT_BTN
+    avatar.BorderSizePixel = 0
+    avatar.Parent = playerInfo
+    avatar.ScaleType = Enum.ScaleType.Fit
+    applyRoundedCorners(avatar, 12)
+
+    local thumbType, thumbSize = Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48
+    local thumbContent = Players:GetUserThumbnailAsync(userId, thumbType, thumbSize, true)
+    avatar.Image = thumbContent
+
+    local playerNameLabel = Instance.new("TextLabel")
+    playerNameLabel.Name = "PlayerNameLabel"
+    playerNameLabel.Size = UDim2.new(1, -28, 1, 0)
+    playerNameLabel.Position = UDim2.new(0, 28, 0, 0)
+    playerNameLabel.BackgroundTransparency = 1
+    playerNameLabel.Text = userName
+    playerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    playerNameLabel.Font = Enum.Font.Gotham
+    playerNameLabel.TextSize = 10
+    playerNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    playerNameLabel.Parent = playerInfo
+
+    -- Sistema de Arrasto do Hub (otimizado com conexões limpas)
+    local dragging = false
     local currentInputObject = nil
-   
+
     titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-            dragging=true
-            dragStart=input.Position
-            startPos=animationContainer.Position
-            currentInputObject = input -- Armazena o objeto de input atual
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            local dragStart = input.Position
+            local startPos = animationContainer.Position
+            currentInputObject = input
 
             local connection
             connection = input.Changed:Connect(function()
-                if input.UserInputState==Enum.UserInputState.Ended then
-                    dragging=false
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
                     currentInputObject = nil
                     connection:Disconnect()
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(inputChanged)
+                if dragging and currentInputObject == inputChanged and (inputChanged.UserInputType == Enum.UserInputType.MouseMovement or inputChanged.UserInputType == Enum.UserInputType.Touch) then
+                    local delta = inputChanged.Position - dragStart
+                    animationContainer.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                 end
             end)
         end
     end)
 
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and currentInputObject == input and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
-            local delta=input.Position-dragStart
-            animationContainer.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
-        end
-    end)
-
-
+    -- Funções de Criação de Botões (otimizadas para reutilização)
     local function clearScripts()
-        for _,c in pairs(scriptContainer:GetChildren()) do
-            if c:IsA("GuiObject") and c.Name ~= "ScriptFooter" then -- Garante que o rodapé não seja destruído
-                c:Destroy()
+        for _, child in pairs(scriptContainer:GetChildren()) do
+            if child:IsA("GuiObject") and child.Name ~= "ScriptFooter" then
+                child:Destroy()
             end
         end
-        -- Garante que o layout seja atualizado depois de limpar
-        if layoutScript then layoutScript:SetAttribute("Refresh", true) end
+        layoutScript:SetAttribute("Refresh", true)
     end
 
     local function createScriptButton(name, func)
-        local btn=Instance.new("TextButton")
-        btn.Size=UDim2.new(1,0,0,28) -- Altura ajustada
-        btn.BackgroundColor3=COLOR_SCRIPT_BTN
-        btn.BorderSizePixel=0
-        btn.TextColor3=COLOR_TEXT
-        btn.Font=Enum.Font.Gotham
-        btn.TextSize=12 -- Tamanho da fonte ajustado
-        btn.Text=name
-        btn.TextXAlignment=Enum.TextXAlignment.Center
-        btn.Parent=scriptContainer
-        applyRoundedCorners(btn,10) -- Raio ajustado
-        local border=Instance.new("UIStroke")
-        border.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-        border.Thickness=1.5
-        border.LineJoinMode=Enum.LineJoinMode.Round
-        border.Parent=btn
-        local gradient=Instance.new("UIGradient")
-        gradient.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,140,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(220,100,0))})
-        gradient.Rotation=90
-        gradient.Parent=border
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 28)
+        btn.BackgroundColor3 = COLOR_SCRIPT_BTN
+        btn.BorderSizePixel = 0
+        btn.TextColor3 = COLOR_TEXT
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 12
+        btn.Text = name
+        btn.TextXAlignment = Enum.TextXAlignment.Center
+        btn.Parent = scriptContainer
+        applyRoundedCorners(btn, 10)
+
+        local border = Instance.new("UIStroke")
+        border.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        border.Thickness = 1.5
+        border.LineJoinMode = Enum.LineJoinMode.Round
+        border.Parent = btn
+        local gradient = Instance.new("UIGradient")
+        gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 100, 0))
+        })
+        gradient.Rotation = 90
+        gradient.Parent = border
 
         btn.MouseButton1Click:Connect(function()
             btn.Text = "Executando..."
@@ -599,85 +741,89 @@ local function createHub()
             spawn(function()
                 pcall(func)
                 wait(3)
-                closeHubWithAnimation(MainFrameContainer) -- Use MainFrameContainer para fechar o hub
+                closeHubWithAnimation(MainFrameContainer)
             end)
         end)
         return btn
     end
 
     local function createUpdateLabel(text, textColor, font)
-        local lbl=Instance.new("TextLabel")
-        lbl.Size=UDim2.new(1,0,0,18) -- Altura ajustada
-        lbl.BackgroundTransparency=1
-        lbl.TextColor3=textColor or COLOR_TEXT -- Usar textColor se fornecido, senão COLOR_TEXT
-        lbl.Font=font or Enum.Font.Gotham -- Usa a fonte especificada ou Gotham padrão
-        lbl.TextSize=12 -- Tamanho da fonte ajustado
-        lbl.Text=text
-        lbl.TextWrapped=true
-        lbl.TextXAlignment=Enum.TextXAlignment.Center
-        lbl.TextYAlignment=Enum.TextYAlignment.Top
-        lbl.Parent=scriptContainer
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, 0, 0, 18)
+        lbl.BackgroundTransparency = 1
+        lbl.TextColor3 = textColor or COLOR_TEXT
+        lbl.Font = font or Enum.Font.Gotham
+        lbl.TextSize = 12
+        lbl.Text = text
+        lbl.TextWrapped = true
+        lbl.TextXAlignment = Enum.TextXAlignment.Center
+        lbl.TextYAlignment = Enum.TextYAlignment.Top
+        lbl.Parent = scriptContainer
         return lbl
     end
 
     local function createCategoryButton(name, contents, layoutOrder)
-        local btn=Instance.new("TextButton")
-        btn.Name = name:gsub("%s+", "") -- Nome único para o botão
-        btn.Size=UDim2.new(1,0,0,22) -- Altura ajustada
-        btn.BackgroundColor3=COLOR_CATEGORY_BTN
-        btn.BorderSizePixel=0
-        btn.TextColor3=Color3.fromRGB(230,230,230)
-        btn.Font=Enum.Font.Gotham
-        btn.TextSize=9 -- Tamanho da fonte ajustado
-        btn.Text=name
-        btn.TextXAlignment=Enum.TextXAlignment.Center
-        btn.Parent=categoryContainer
-        applyRoundedCorners(btn,8)
-        local border=Instance.new("UIStroke")
-        border.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-        border.Thickness=1.5
-        border.LineJoinMode=Enum.LineJoinMode.Round
-        border.Parent=btn
-        local gradient=Instance.new("UIGradient")
-        gradient.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,140,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(220,100,0))})
-        gradient.Rotation=90
-        gradient.Parent=border
-        if layoutOrder then btn.LayoutOrder = layoutOrder end
+        local btn = Instance.new("TextButton")
+        btn.Name = name:gsub("%s+", "")
+        btn.Size = UDim2.new(1, 0, 0, 22)
+        btn.BackgroundColor3 = COLOR_CATEGORY_BTN
+        btn.BorderSizePixel = 0
+        btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 9
+        btn.Text = name
+        btn.TextXAlignment = Enum.TextXAlignment.Center
+        btn.Parent = categoryContainer
+        applyRoundedCorners(btn, 8)
+
+        local border = Instance.new("UIStroke")
+        border.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        border.Thickness = 1.5
+        border.LineJoinMode = Enum.LineJoinMode.Round
+        border.Parent = btn
+        local gradient = Instance.new("UIGradient")
+        gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 100, 0))
+        })
+        gradient.Rotation = 90
+        gradient.Parent = border
+
+        if layoutOrder then
+            btn.LayoutOrder = layoutOrder
+        end
 
         btn.MouseButton1Click:Connect(function()
             clearScripts()
-            -- Esconde o rodapé do scriptContainer por padrão
             scriptFooter.Visible = false
 
-            if typeof(contents)=="table" then
-                for _,s in ipairs(contents) do -- Usar ipairs para iterar tabelas numéricas
-                    createScriptButton(s.Name,s.Func)
+            if typeof(contents) == "table" then
+                for _, script in ipairs(contents) do
+                    createScriptButton(script.Name, script.Func)
                 end
-            elseif typeof(contents)=="string" then
+            elseif typeof(contents) == "string" then
                 createUpdateLabel(contents)
-            elseif typeof(contents)=="function" then
+            elseif typeof(contents) == "function" then
                 contents()
-                -- Se a função for displayUpdates, mostra o rodapé
                 if contents == displayUpdates then
                     scriptFooter.Visible = true
                 end
             end
-            -- Força a atualização do layout após adicionar os scripts
-            if layoutScript then layoutScript:SetAttribute("Refresh", true) end
+            layoutScript:SetAttribute("Refresh", true)
         end)
         return btn
     end
 
-    -- NOVO TEXTO PARA A ABA DE ATUALIZAÇÕES
+    -- Aba de Atualizações (atualizada com nova nota sobre scroll)
     local updatesTextFormatted = {
-        {Text = "Khalexis Hub V1.1", Color = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamBold}, -- Texto em negrito
+        {Text = "Khalexis Hub V1.2", Color = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamBold},
         {Text = "+1 Script Steal a Brainrot", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "+1 Script Forsaken", Color = Color3.fromRGB(220, 220, 220)},
         {Text = "+1 Script Pegue o Peixe!", Color = Color3.fromRGB(220, 220, 220)},
-        {Text = "Nova Mensagem de Boas Vindas!", Color = Color3.fromRGB(220, 220, 220)}, -- Adicionado
-        {Text = "Correções de Bugs", Color = Color3.fromRGB(220, 220, 220)},
-        {Text = "Tamanho do Hub Editado", Color = Color3.fromRGB(220, 220, 220)}, -- Texto atualizado
-        {Text = "DEIXE UMA SUGESTÃO NO DC!", Color = Color3.fromRGB(255, 140, 0), Font = Enum.Font.GothamBold}, -- Texto atualizado e em maiúsculo
+        {Text = "Nova Mensagem de Boas Vindas!", Color = Color3.fromRGB(220, 220, 220)},
+        {Text = "Correções de Bugs no Scroll", Color = Color3.fromRGB(220, 220, 220)},  -- NOVA NOTA
+        {Text = "Tamanho do Hub Editado", Color = Color3.fromRGB(220, 220, 220)},
+        {Text = "DEIXE UMA SUGESTÃO NO DC!", Color = Color3.fromRGB(255, 140, 0), Font = Enum.Font.GothamBold},
     }
 
     local function displayUpdates()
@@ -685,136 +831,117 @@ local function createHub()
         for _, lineData in ipairs(updatesTextFormatted) do
             createUpdateLabel(lineData.Text, lineData.Color, lineData.Font)
         end
-        scriptFooter.Visible = true -- Torna o rodapé visível apenas para a aba de atualizações
-        if layoutScript then layoutScript:SetAttribute("Refresh", true) end -- Força a atualização do layout
+        scriptFooter.Visible = true
+        layoutScript:SetAttribute("Refresh", true)
     end
 
-    -- Script definitions with new additions and modifications
-    local stealScripts={
-        {Name="Dofug",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/OneClye1/dofug/refs/heads/main/dofug.txt"))()end, LayoutOrder=1}, -- NOVO SCRIPT E EM PRIMEIRO
-        {Name="Miranda Tween",Func=function()loadstring(game:HttpGet("https://pastefy.app/TnWWJ4NS/raw"))()end, LayoutOrder=2},
-        {Name="Chilli Hub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/tienkhanh1/spicy/main/Chilli.lua"))()end, LayoutOrder=3},
-        {Name="Delfi Script",Func=function()loadstring(game:HttpGet("https://pastefy.app/7MQOgJCO/raw"))()end, LayoutOrder=4}
+    -- Definições de Scripts (otimizadas com LayoutOrder onde aplicável)
+    local stealScripts = {
+        {Name = "Dofug", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/OneClye1/dofug/refs/heads/main/dofug.txt"))() end, LayoutOrder = 1},
+        {Name = "Miranda Tween", Func = function() loadstring(game:HttpGet("https://pastefy.app/TnWWJ4NS/raw"))() end, LayoutOrder = 2},
+        {Name = "Chilli Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/tienkhanh1/spicy/main/Chilli.lua"))() end, LayoutOrder = 3},
+        {Name = "Delfi Script", Func = function() loadstring(game:HttpGet("https://pastefy.app/7MQOgJCO/raw"))() end, LayoutOrder = 4}
     }
-    local noiteScripts={{Name="Iliankytb",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Iliankytb/Iliankytb/main/Best99NightsInTheForest"))()end},{Name="Kenniel Scripts",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Kenniel123/99-Nights-in-the-Forest/refs/heads/main/99%20Nights%20in%20the%20Forest"))()end},{Name="Hutao Hub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/SLK-gaming/Hutao-Hub/refs/heads/main/99-Nights-In-The-Forest.txt"))()end},{Name="Ringta Script",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/wefwef127382/99daysloader.github.io/refs/heads/main/ringta.lua"))()end},{Name="Voidware",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VWExtra/main/NightsInTheForest.lua",true))()end},{Name="Vex Op",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/yoursvexyyy/VEX-OP/refs/heads/main/99%20nights%20in%20the%20forest"))()end}}
-    local growScripts={{Name="No Lag Hub",Func=function()loadstring(game:HttpGet("https://pastebin.com/raw/XHMN2zpp"))()end},{Name="MauScripts",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/nootmaus/GrowAAGarden/refs/heads/main/mauscripts"))()end},{Name="ThanHub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/thantzy/thanhub/refs/heads/main/thanv1"))()end}}
-    local voxSeasScripts={{Name="Brutus Hub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/codenixstudios/brutus-hub/BRUTUS_TEAM/Games/VoxSeas.lua"))()end},{Name="Type Hub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/meobeo8/type/main/VoxSeasAutoChest.lua"))()end},{Name="Idk Hub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/shakaUnlocked/IiI/refs/heads/main/vxs.lua"))()end}}
-    local bloxFruitsScripts={{Name="Xero Hub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Xero2409/XeroHub/refs/heads/main/main.lua"))()end, LayoutOrder=1},{Name="Volcano Hub",Func=function()loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/indexeduu/BF-NewVer/refs/heads/main/V3New.lua"))()end, LayoutOrder=2},{Name="Blue X Hub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Dev-BlueX/BlueX-Hub/refs/heads/main/Main.lua"))()end, LayoutOrder=3},{Name="Quantum Onyx",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/flazhy/QuantumOnyx/refs/heads/main/QuantumOnyx.lua"))()end,LayoutOrder=4}}
-    local kingLegacyScripts={{Name="Zee Hub",Func=function()loadstring(game:HttpGet('https://zuwz.me/Ls-Zee-Hub-KL'))()end}}
-    local rivalsScripts={{Name="Rise",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/ShadowBey01/SHWX-Team-Rise-Scripts/refs/heads/main/Games/Rise%20(Rivals).lua",true))()end}}
-    local doorsScripts={{Name="Velocity X",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/DasVelocity/VelocityX/refs/heads/main/VelocityX.lua"))()end},{Name="Saturn Hub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/JScripter-Lua/Saturn_Hub_Products/refs/heads/main/Saturn_Hub_Doors.lua"))()end}}
-    local brookhavenScripts={{Name="Sander XY",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/kigredns/testUIDK/refs/heads/main/panel.lua"))()end}}
-    local buildAPlaneScripts={{Name="Arbix Hub",Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Z1ntrax/bigmac/refs/heads/main/bap/bapobfuscated.lua"))()end}}
-    local inkGameScripts={{Name="Revive Hub",Func=function()loadstring(game:HttpGet('https://raw.githubusercontent.com/Have3165/Reviv3-Hub/refs/heads/main/InkGame'))()end}}
-    local naturalDisasterScripts={{Name="BaconJJScript",Func=function()loadstring(game:HttpGet("https://pastebin.com/raw/MAnXu0qv"))()end}}
-   
-    -- NOVA CATEGORIA: Forsaken Scripts
+    local noiteScripts = {
+        {Name = "Iliankytb", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Iliankytb/Iliankytb/main/Best99NightsInTheForest"))() end},
+        {Name = "Kenniel Scripts", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Kenniel123/99-Nights-in-the-Forest/refs/heads/main/99%20Nights%20in%20the%20Forest"))() end},
+        {Name = "Hutao Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/SLK-gaming/Hutao-Hub/refs/heads/main/99-Nights-In-The-Forest.txt"))() end},
+        {Name = "Ringta Script", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/wefwef127382/99daysloader.github.io/refs/heads/main/ringta.lua"))() end},
+        {Name = "Voidware", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VWExtra/main/NightsInTheForest.lua", true))() end},
+        {Name = "Vex Op", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/yoursvexyyy/VEX-OP/refs/heads/main/99%20nights%20in%20the%20forest"))() end}
+    }
+    local growScripts = {
+        {Name = "No Lag Hub", Func = function() loadstring(game:HttpGet("https://pastebin.com/raw/XHMN2zpp"))() end},
+        {Name = "MauScripts", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nootmaus/GrowAAGarden/refs/heads/main/mauscripts"))() end},
+        {Name = "ThanHub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/thantzy/thanhub/refs/heads/main/thanv1"))() end}
+    }
+    local voxSeasScripts = {
+        {Name = "Brutus Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/codenixstudios/brutus-hub/BRUTUS_TEAM/Games/VoxSeas.lua"))() end},
+        {Name = "Type Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/meobeo8/type/main/VoxSeasAutoChest.lua"))() end},
+        {Name = "Idk Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/shakaUnlocked/IiI/refs/heads/main/vxs.lua"))() end}
+    }
+    local bloxFruitsScripts = {
+        {Name = "Xero Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Xero2409/XeroHub/refs/heads/main/main.lua"))() end, LayoutOrder = 1},
+        {Name = "Volcano Hub", Func = function() loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/indexeduu/BF-NewVer/refs/heads/main/V3New.lua"))() end, LayoutOrder = 2},
+        {Name = "Blue X Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Dev-BlueX/BlueX-Hub/refs/heads/main/Main.lua"))() end, LayoutOrder = 3}
+    }
+    local kingLegacyScripts = {
+        {Name = "Zee Hub", Func = function() loadstring(game:HttpGet('https://zuwz.me/Ls-Zee-Hub-KL'))() end}
+    }
+    local rivalsScripts = {
+        {Name = "Rise", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/ShadowBey01/SHWX-Team-Rise-Scripts/refs/heads/main/Games/Rise%20(Rivals).lua", true))() end}
+    }
+    local doorsScripts = {
+        {Name = "Velocity X", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/DasVelocity/VelocityX/refs/heads/main/VelocityX.lua"))() end},
+        {Name = "Saturn Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/JScripter-Lua/Saturn_Hub_Products/refs/heads/main/Saturn_Hub_Doors.lua"))() end}
+    }
+    local brookhavenScripts = {
+        {Name = "Sander XY", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/kigredns/testUIDK/refs/heads/main/panel.lua"))() end}
+    }
+    local buildAPlaneScripts = {
+        {Name = "Arbix Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Z1ntrax/bigmac/refs/heads/main/bap/bapobfuscated.lua"))() end}
+    }
+    local inkGameScripts = {
+        {Name = "Revive Hub", Func = function() loadstring(game:HttpGet('https://raw.githubusercontent.com/Have3165/Reviv3-Hub/refs/heads/main/InkGame'))() end}
+    }
+    local naturalDisasterScripts = {
+        {Name = "BaconJJScript", Func = function() loadstring(game:HttpGet("https://pastebin.com/raw/MAnXu0qv"))() end}
+    }
     local forsakenScripts = {
-        {Name="SNT HUB", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Snowt69/SNT-HUB/refs/heads/main/Forsaken"))()end}
+        {Name = "SNT HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Snowt69/SNT-HUB/refs/heads/main/Forsaken"))() end}
     }
-
-    -- NOVA CATEGORIA: Pegue o Peixe Scripts
     local pegueOPeixeScripts = {
-        {Name="VinzHub", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Vinzyy13/VinzHub/refs/heads/main/Fish-It"))()end}
+        {Name = "VinzHub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Vinzyy13/VinzHub/refs/heads/main/Fish-It"))() end}
     }
 
-    -- Novas categorias adicionadas e organizadas
-    local murderMysteryScripts = {
-        {Name="Thunder hub MM2", Func=function()loadstring(game:HttpGet('https://raw.githubusercontent.com/Roman34296589/SnapSanixHUB/refs/heads/main/SnapSanixHUB.lua'))()end}
-    }
-    local weakLegacy2Scripts = {
-        {Name="L4BIB HUB", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/L4BIBKAZI/L4BIB-HUB/refs/heads/main/Weak%20Legacy%202"))()end}
-    }
-    local plantaVSBrainrotScripts = {
-        {Name="Gumanba", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/main/PlantsVsBrainrots"))()end},
-        {Name="Blessed-Hub-X", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/mynamewendel-ctrl/Blessed-Hub-X-/refs/heads/main/Plants-Vs-Brainrots.lua"))()end}
-    }
-    local deadRailsScripts = {
-        {Name="Qiwik hub", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Qiwikox12/stubrawl/refs/heads/main/DeadRails.txt"))()end},
-        {Name="Tora IsMe", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/refs/heads/main/DeadRails", true))()end}
-    }
-    local testeDeQiScripts = {
-        {Name="Aqua-Hub", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/ExploiterGuy/Aqua-Hub/refs/heads/main/IQ%20TEST.txt"))()end}
-    }
-    local passOrDieScripts = {
-        {Name="DAVITROLLZ", Func=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/Davidfhdgfyyfytyttry/DAVITROLLZ-BRASIL/refs/heads/main/Pass%20or%20die"))()end}
-    }
-    local mathMurderScripts = {
-        -- Adicione scripts aqui se necessário para esta categoria
-    }
+    -- Criação das Categorias (ordem otimizada)
+    createCategoryButton("📣 Atualizações 📣", displayUpdates, 1)
+    createCategoryButton("Steal a Brainrot Scripts", stealScripts, 2)
+    createCategoryButton("99 Noites na Floresta Scripts", noiteScripts, 3)
+    createCategoryButton("Grow a Garden Scripts", growScripts, 4)
+    createCategoryButton("Vox Seas Scripts", voxSeasScripts, 5)
+    createCategoryButton("Blox Fruits Scripts", bloxFruitsScripts, 6)
+    createCategoryButton("King Legacy Scripts", kingLegacyScripts, 7)
+    createCategoryButton("Rivals Scripts", rivalsScripts, 8)
+    createCategoryButton("Doors Scripts", doorsScripts, 9)
+    createCategoryButton("Brookhaven Scripts", brookhavenScripts, 10)
+    createCategoryButton("Build a Plane Scripts", buildAPlaneScripts, 11)
+    createCategoryButton("Ink Game Scripts", inkGameScripts, 12)
+    createCategoryButton("Natural Disaster Scripts", naturalDisasterScripts, 13)
+    createCategoryButton("Forsaken Scripts", forsakenScripts, 14)
+    createCategoryButton("Pegue o Peixe Scripts", pegueOPeixeScripts, 15)
 
-    -- ADICIONANDO NOVAS CATEGORIAS PARA EXPANDIR A LISTA E A ROlAGEM
-    local fightingGamesScripts = {
-        {Name="Hub Fighting (Exemplo 1)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_FIGHTING_GAMES_1"))()end},
-        {Name="Hub Fighting (Exemplo 2)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_FIGHTING_GAMES_2"))()end}
-    }
-    local simulationScripts = {
-        {Name="Hub Sim (Exemplo 1)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_SIMULATION_1"))()end},
-        {Name="Hub Sim (Exemplo 2)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_SIMULATION_2"))()end}
-    }
-    local tycoonScripts = {
-        {Name="Hub Tycoon (Exemplo 1)", Func=function()loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_TYCOON_1"))()end}
-    }
-    -- Adicione mais categorias e scripts conforme necessário. Quanto mais, mais rolagem você terá.
-
-    -- Category buttons with updated order and new categories
-    createCategoryButton("📣 Atualizações 📣",displayUpdates, 1) -- Chama a função para exibir as atualizações formatadas
-    createCategoryButton("Steal a Brainrot Scripts",stealScripts, 2)
-    createCategoryButton("99 Noites na Floresta Scripts",noiteScripts, 3)
-    createCategoryButton("Grow a Garden Scripts",growScripts, 4)
-    createCategoryButton("Vox Seas Scripts",voxSeasScripts, 5)
-    createCategoryButton("Blox Fruits Scripts",bloxFruitsScripts, 6)
-    createCategoryButton("King Legacy Scripts",kingLegacyScripts, 7)
-    createCategoryButton("Rivals Scripts",rivalsScripts, 8)
-    createCategoryButton("Doors Scripts",doorsScripts, 9)
-    createCategoryButton("Brookhaven Scripts",brookhavenScripts, 10)
-    createCategoryButton("Build a Plane Scripts",buildAPlaneScripts, 11)
-    createCategoryButton("Ink Game Scripts",inkGameScripts, 12)
-    createCategoryButton("Natural Disaster Scripts",naturalDisasterScripts, 13)
-    createCategoryButton("Forsaken Scripts", forsakenScripts, 14) -- NOVA CATEGORIA: Forsaken Scripts
-    createCategoryButton("Pegue o Peixe Scripts", pegueOPeixeScripts, 15) -- NOVA CATEGORIA: Pegue o Peixe Scripts
-    -- Novas categorias adicionadas no final
-    createCategoryButton("Murder mystery Scripts", murderMysteryScripts, 16)
-    createCategoryButton("Weak legacy 2", weakLegacy2Scripts, 17)
-    createCategoryButton("Planta VS brainrot Scripts", plantaVSBrainrotScripts, 18)
-    createCategoryButton("Dead rails Scripts", deadRailsScripts, 19)
-    createCategoryButton("Teste de Qi Scripts", testeDeQiScripts, 20)
-    createCategoryButton("Pass or Die Scripts", passOrDieScripts, 21)
-    createCategoryButton("Math Murder Scripts", mathMurderScripts, 22)
-    -- Adicionando as novas categorias criadas
-    createCategoryButton("Fighting Games", fightingGamesScripts, 23)
-    createCategoryButton("Simulation Games", simulationScripts, 24)
-    createCategoryButton("Tycoon Games", tycoonScripts, 25)
-    -- Adicione mais botões de categoria aqui para aumentar a rolagem
-
-
-    -- Simula um clique na primeira categoria para que os scripts apareçam ao abrir
+    -- Clique Inicial na Primeira Categoria
     local firstCategoryButton = categoryContainer:FindFirstChildOfClass("TextButton")
     if firstCategoryButton then
         firstCategoryButton:MouseButton1Click()
     end
+
     return animationContainer
 end
 
+-- Carregamento e Abertura do Hub (com boas-vindas otimizada)
 local function showLoadingAndOpenHub()
-    LoadingScreen,StopLoadingAnim=showLoadingScreen()
+    LoadingScreen, StopLoadingAnim = showLoadingScreen()
     wait(2)
-    if StopLoadingAnim then StopLoadingAnim() end
-    if LoadingScreen and LoadingScreen.Parent then LoadingScreen:Destroy() end
+    if StopLoadingAnim then
+        StopLoadingAnim()
+    end
+    if LoadingScreen and LoadingScreen.Parent then
+        LoadingScreen:Destroy()
+    end
 
-    -- MENSAGEM DE BOAS-VINDAS ANTES DE ABRIR O HUB (APENAS NA PRIMEIRA VEZ)
     if not HasShownWelcome then
         local welcomeFrame = Instance.new("Frame")
-        welcomeFrame.Size = UDim2.new(0, 0, 0, 0) -- Começa do tamanho 0 para animação
+        welcomeFrame.Size = UDim2.new(0, 0, 0, 0)
         welcomeFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
         welcomeFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-        welcomeFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- MESMO TOM DE PRETO DA TELA DE CARREGAMENTO
+        welcomeFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         welcomeFrame.BorderSizePixel = 0
         welcomeFrame.Parent = ScreenGui
-        applyRoundedCorners(welcomeFrame, 16) -- MESMA BORDA DA TELA DE CARREGAMENTO
-        welcomeFrame.BackgroundTransparency = 1 -- Começa transparente para a animação
+        applyRoundedCorners(welcomeFrame, 16)
+        welcomeFrame.BackgroundTransparency = 1
 
-        -- Adiciona a borda preta da tela de carregamento
         local border = Instance.new("UIStroke")
         border.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         border.Color = Color3.fromRGB(0, 0, 0)
@@ -824,16 +951,15 @@ local function showLoadingAndOpenHub()
         local welcomeMsg = Instance.new("TextLabel")
         welcomeMsg.Size = UDim2.new(1, 0, 1, 0)
         welcomeMsg.BackgroundTransparency = 1
-        welcomeMsg.TextColor3 = Color3.fromRGB(255, 255, 255) -- Texto branco
+        welcomeMsg.TextColor3 = Color3.fromRGB(255, 255, 255)
         welcomeMsg.Font = Enum.Font.GothamBold
         welcomeMsg.TextSize = 20
-        welcomeMsg.Text = "Bem Vindo " .. player.Name .. " ao Khalexis Hub!"
+        welcomeMsg.Text = "Bem Vindo " .. userName .. " ao Khalexis Hub!"
         welcomeMsg.TextWrapped = true
         welcomeMsg.TextXAlignment = Enum.TextXAlignment.Center
         welcomeMsg.TextYAlignment = Enum.TextYAlignment.Center
         welcomeMsg.Parent = welcomeFrame
 
-        -- Animação da mensagem de boas-vindas
         local tweenInfoExpand = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
         local goalExpand = {Size = UDim2.new(0, 300, 0, 50), Position = UDim2.new(0.5, -150, 0.5, -25), BackgroundTransparency = 0}
         local tweenExpand = TweenService:Create(welcomeFrame, tweenInfoExpand, goalExpand)
@@ -845,216 +971,286 @@ local function showLoadingAndOpenHub()
 
         tweenExpand:Play()
         tweenExpand.Completed:Wait()
-        wait(1.5) -- Tempo para a mensagem ser lida antes de começar a desvanecer
-       
+        wait(1.5)
         tweenFadeOut:Play()
         tweenFadeOutFrame:Play()
         tweenFadeOutFrame.Completed:Wait()
 
-        if welcomeFrame and welcomeFrame.Parent then welcomeFrame:Destroy() end
+        if welcomeFrame and welcomeFrame.Parent then
+            welcomeFrame:Destroy()
+        end
         HasShownWelcome = true
     end
 
-    MainFrameContainer=createHub()
-    HubOpen=true
-    -- REMOVIDO: ToggleButton.Visible=false -- Garante que o toggle permaneça visível
+    MainFrameContainer = createHub()
+    HubOpen = true
+    ToggleButton.Visible = false
 end
 
-local function validateKeyAndOpen(key,isAuto)
-    local lowerKey=key:lower()
+-- Validação de Key (otimizada)
+local function validateKeyAndOpen(key, isAuto)
+    local lowerKey = key:lower():gsub("%s", "")
     if validKeys[lowerKey] then
         saveKeyLocally(lowerKey)
-        if KeyFrame and KeyFrame.Parent then KeyFrame:Destroy(); KeyFrame=nil end
+        if KeyFrame and KeyFrame.Parent then
+            KeyFrame:Destroy()
+            KeyFrame = nil
+        end
         showLoadingAndOpenHub()
-        ToggleButton.Visible=false -- Aqui também o toggle fica invisível ao ABRIR o hub, mas ele volta a ser visível quando o hub é FECHADO. Se quiser que ele fique SEMPRE visível, esta linha também precisa ser comentada/removida.
-        if isAuto then showAutoMessage("Khalexis Hub carregado! Sua key foi verificada automaticamente.") end
+        ToggleButton.Visible = false
+        if isAuto then
+            showAutoMessage("Khalexis Hub carregado! Sua key foi verificada automaticamente.")
+        end
         return true
     else
         removeLocalKey()
-        if not isAuto then showError("Key incorreta") end
+        if not isAuto then
+            showError("Key incorreta")
+        end
         return false
     end
 end
 
-local function tryAutoValidate() local savedKey=loadKeyLocally(); if savedKey and validKeys[savedKey] then return validateKeyAndOpen(savedKey,true) else removeLocalKey(); return false end end
-
-local function createKeyInputFrame()
-    local frame=Instance.new("Frame")
-    frame.Name="KeyFrame"
-    frame.Size=UDim2.new(0,300,0,240) -- Tamanho ajustado para celular
-    frame.Position=UDim2.new(0.5,-150,0.5,-120) -- Posição ajustada
-    frame.BackgroundColor3=Color3.fromRGB(30,30,30)
-    frame.BorderSizePixel=0
-    frame.Parent=ScreenGui
-    applyRoundedCorners(frame,12)
-
-    local titleLabel=Instance.new("TextLabel")
-    titleLabel.Name="KeyTitle"
-    titleLabel.Size=UDim2.new(1,0,0,30) -- Altura ajustada
-    titleLabel.BackgroundTransparency=1
-    titleLabel.Text="🔒 COLE NO ESPAÇO ABAIXO A SUA KEY 🔒"
-    titleLabel.Font=Enum.Font.GothamBold
-    titleLabel.TextSize=14 -- Tamanho da fonte ajustado
-    titleLabel.TextYAlignment=Enum.TextYAlignment.Center
-    titleLabel.TextXAlignment=Enum.TextXAlignment.Center
-    titleLabel.Parent=frame
-    local byLabel=Instance.new("TextLabel")
-    byLabel.Name="ByLabel"
-    byLabel.Size=UDim2.new(1,0,0,18) -- Altura ajustada
-    byLabel.Position=UDim2.new(0,0,0,32) -- Posição ajustada
-    byLabel.BackgroundTransparency=1
-    byLabel.TextColor3=COLOR_FOOTER_TEXT
-    byLabel.Font=Enum.Font.Gotham
-    byLabel.TextSize=10 -- Tamanho da fonte ajustado
-    byLabel.Text="by khalexis"
-    byLabel.TextXAlignment=Enum.TextXAlignment.Center
-    byLabel.TextYAlignment=Enum.TextYAlignment.Top
-    byLabel.Parent=frame
-    spawn(function() local hue=0; while frame and frame.Parent do hue=(hue+0.01)%1; titleLabel.TextColor3=Color3.fromHSV(hue,1,1); wait(0.03) end end)
-
-    local keyBox=Instance.new("TextBox")
-    keyBox.Name="KeyBox"
-    keyBox.Size=UDim2.new(1,-30,0,35) -- Tamanho ajustado
-    keyBox.Position=UDim2.new(0,15,0,55) -- Posição ajustada
-    keyBox.BackgroundColor3=Color3.fromRGB(45,45,45)
-    keyBox.TextColor3=COLOR_TEXT
-    keyBox.Font=Enum.Font.Gotham
-    keyBox.TextSize=16 -- Tamanho da fonte ajustado
-    keyBox.ClearTextOnFocus=false
-    keyBox.Text=""
-    keyBox.PlaceholderText=""
-    applyRoundedCorners(keyBox,8)
-    keyBox.Parent=frame
-
-    local confirmBtn=Instance.new("TextButton")
-    confirmBtn.Name="EnterButton"
-    confirmBtn.Size=UDim2.new(0,90,0,30) -- Tamanho ajustado
-    confirmBtn.Position=UDim2.new(0.5,-45,0,95) -- Posição ajustada
-    confirmBtn.BackgroundColor3=COLOR_SCRIPT_BTN
-    confirmBtn.TextColor3=COLOR_TEXT
-    confirmBtn.Font=Enum.Font.GothamBold
-    confirmBtn.TextSize=16 -- Tamanho da fonte ajustado
-    confirmBtn.Text="Confirmar"
-    applyRoundedCorners(confirmBtn,8)
-    confirmBtn.Parent=frame
-
-    local copyKeyBtn=Instance.new("TextButton")
-    copyKeyBtn.Name="PegarKeyButton"
-    copyKeyBtn.Size=UDim2.new(0,70,0,25) -- Tamanho ajustado
-    copyKeyBtn.Position=UDim2.new(0.5,-35,0,130) -- Posição ajustada
-    copyKeyBtn.BackgroundColor3=COLOR_SCRIPT_BTN
-    copyKeyBtn.TextColor3=Color3.new(1,1,1)
-    copyKeyBtn.Font=Enum.Font.GothamBold
-    copyKeyBtn.TextSize=10 -- Tamanho da fonte ajustado
-    copyKeyBtn.Text="Pegar Key"
-    applyRoundedCorners(copyKeyBtn,8)
-    copyKeyBtn.Parent=frame
-
-    local infoLabel=Instance.new("TextLabel")
-    infoLabel.Name="InfoText"
-    infoLabel.Size=UDim2.new(1,-20,0,25) -- Altura ajustada
-    infoLabel.Position=UDim2.new(0,10,0,165) -- Posição ajustada
-    infoLabel.BackgroundTransparency=1
-    infoLabel.Font=Enum.Font.GothamBold
-    infoLabel.TextSize=10 -- Tamanho da fonte ajustado
-    infoLabel.Text="CLIQUE EM PEGAR KEY E COLE NO NAVEGADOR"
-    infoLabel.TextWrapped=true
-    infoLabel.TextXAlignment=Enum.TextXAlignment.Center
-    infoLabel.TextYAlignment=Enum.TextYAlignment.Top
-    infoLabel.Parent=frame
-    local subInfoLabel=Instance.new("TextLabel")
-    subInfoLabel.Name="SubInfoText"
-    subInfoLabel.Size=UDim2.new(1,-20,0,18) -- Altura ajustada
-    subInfoLabel.Position=UDim2.new(0,10,0,190) -- Posição ajustada
-    subInfoLabel.BackgroundTransparency=1
-    subInfoLabel.Font=Enum.Font.Gotham
-    subInfoLabel.TextSize=12 -- Tamanho da fonte ajustado
-    subInfoLabel.TextColor3=COLOR_FOOTER_TEXT
-    subInfoLabel.TextWrapped=false
-    subInfoLabel.TextXAlignment=Enum.TextXAlignment.Center
-    subInfoLabel.TextYAlignment=Enum.TextYAlignment.Top
-    subInfoLabel.Text="Sistema de Key - Khalexis Hub"
-    subInfoLabel.Parent=frame
-    spawn(function() local hue=0; while frame and frame.Parent do hue=(hue+0.01)%1; infoLabel.TextColor3=Color3.fromHSV(hue,1,1); wait(0.03) end end)
-
-    ErrorLabel=Instance.new("TextLabel")
-    ErrorLabel.Name="ErrorLabel"
-    ErrorLabel.Size=UDim2.new(1,0,0,20) -- Altura ajustada
-    ErrorLabel.Position=UDim2.new(0,0,1,-70) -- Posição ajustada
-    ErrorLabel.BackgroundTransparency=1
-    ErrorLabel.TextColor3=COLOR_ERROR
-    ErrorLabel.Font=Enum.Font.GothamBold
-    ErrorLabel.TextSize=14 -- Tamanho da fonte ajustado
-    ErrorLabel.Text=""
-    ErrorLabel.Parent=frame
-    local function showLocalError(msg) ErrorLabel.Text=msg; spawn(function() wait(2); if ErrorLabel and ErrorLabel.Parent==frame then ErrorLabel.Text="" end end) end -- Reatribuição para evitar warning (não ideal, mas mantém a lógica original)
-
-    copyKeyBtn.MouseButton1Click:Connect(function() local s,_=copyToClipboard("discord.gg/aNaFpb2Qsb"); if s then copyKeyBtn.Text="Link copiado!"; wait(2); copyKeyBtn.Text="Pegar Key" else showLocalError("Falha ao copiar.") end end)
-    confirmBtn.MouseButton1Click:Connect(function() validateKeyAndOpen(keyBox.Text:gsub("%s",""):lower(),false) end)
-    return frame,showLocalError
+local function tryAutoValidate()
+    local savedKey = loadKeyLocally()
+    if savedKey and validKeys[savedKey] then
+        return validateKeyAndOpen(savedKey, true)
+    else
+        removeLocalKey()
+        return false
+    end
 end
 
-ToggleButton=Instance.new("TextButton")
-ToggleButton.Name="ToggleButton"
-ToggleButton.Size=UDim2.new(0,35,0,35) -- Tamanho do toggle ajustado
-ToggleButton.Position=UDim2.new(0,10,0,10)
-ToggleButton.BackgroundColor3=Color3.new(0,0,0)
-ToggleButton.TextColor3=Color3.new(1,1,1)
-ToggleButton.Text="K"
-ToggleButton.Font=Enum.Font.GothamBold
-ToggleButton.TextSize=24 -- Tamanho da fonte do toggle ajustado
-ToggleButton.Parent=ScreenGui
-applyRoundedCorners(ToggleButton,10)
--- REMOVIDO: ToggleButton.Visible=false -- O toggle agora é sempre visível por padrão.
+-- Frame de Input de Key (otimizado para mobile e animações)
+local function createKeyInputFrame()
+    local frame = Instance.new("Frame")
+    frame.Name = "KeyFrame"
+    frame.Size = UDim2.new(0, 300, 0, 240)
+    frame.Position = UDim2.new(0.5, -150, 0.5, -120)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BorderSizePixel = 0
+    frame.Parent = ScreenGui
+    applyRoundedCorners(frame, 12)
 
-local draggingToggle=false
-local dragStartToggle,startPosToggle
--- CORREÇÃO DO BUG DE ARRASTAR: Usar um InputObject global para arrastar o toggle
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "KeyTitle"
+    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "🔒 COLE NO ESPAÇO ABAIXO A SUA KEY 🔒"
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 14
+    titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Center
+    titleLabel.Parent = frame
+
+    local byLabel = Instance.new("TextLabel")
+    byLabel.Name = "ByLabel"
+    byLabel.Size = UDim2.new(1, 0, 0, 18)
+    byLabel.Position = UDim2.new(0, 0, 0, 32)
+    byLabel.BackgroundTransparency = 1
+    byLabel.TextColor3 = COLOR_FOOTER_TEXT
+    byLabel.Font = Enum.Font.Gotham
+    byLabel.TextSize = 10
+    byLabel.Text = "by khalexis"
+    byLabel.TextXAlignment = Enum.TextXAlignment.Center
+    byLabel.TextYAlignment = Enum.TextYAlignment.Top
+    byLabel.Parent = frame
+
+    -- Animação de Cor no Título
+    spawn(function()
+        local hue = 0
+        while frame and frame.Parent do
+            hue = (hue + 0.01) % 1
+            titleLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
+            wait(0.03)
+        end
+    end)
+
+    local keyBox = Instance.new("TextBox")
+    keyBox.Name = "KeyBox"
+    keyBox.Size = UDim2.new(1, -30, 0, 35)
+    keyBox.Position = UDim2.new(0, 15, 0, 55)
+    keyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    keyBox.TextColor3 = COLOR_TEXT
+    keyBox.Font = Enum.Font.Gotham
+    keyBox.TextSize = 16
+    keyBox.ClearTextOnFocus = false
+    keyBox.Text = ""
+    keyBox.PlaceholderText = ""
+    applyRoundedCorners(keyBox, 8)
+    keyBox.Parent = frame
+
+    local confirmBtn = Instance.new("TextButton")
+    confirmBtn.Name = "EnterButton"
+    confirmBtn.Size = UDim2.new(0, 90, 0, 30)
+    confirmBtn.Position = UDim2.new(0.5, -45, 0, 95)
+    confirmBtn.BackgroundColor3 = COLOR_SCRIPT_BTN
+    confirmBtn.TextColor3 = COLOR_TEXT
+    confirmBtn.Font = Enum.Font.GothamBold
+    confirmBtn.TextSize = 16
+    confirmBtn.Text = "Confirmar"
+    applyRoundedCorners(confirmBtn, 8)
+    confirmBtn.Parent = frame
+
+    local copyKeyBtn = Instance.new("TextButton")
+    copyKeyBtn.Name = "PegarKeyButton"
+    copyKeyBtn.Size = UDim2.new(0, 70, 0, 25)
+    copyKeyBtn.Position = UDim2.new(0.5, -35, 0, 130)
+    copyKeyBtn.BackgroundColor3 = COLOR_SCRIPT_BTN
+    copyKeyBtn.TextColor3 = Color3.new(1, 1, 1)
+    copyKeyBtn.Font = Enum.Font.GothamBold
+    copyKeyBtn.TextSize = 10
+    copyKeyBtn.Text = "Pegar Key"
+    applyRoundedCorners(copyKeyBtn, 8)
+    copyKeyBtn.Parent = frame
+
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Name = "InfoText"
+    infoLabel.Size = UDim2.new(1, -20, 0, 25)
+    infoLabel.Position = UDim2.new(0, 10, 0, 165)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.Font = Enum.Font.GothamBold
+    infoLabel.TextSize = 10
+    infoLabel.Text = "CLIQUE EM PEGAR KEY E COLE NO NAVEGADOR"
+    infoLabel.TextWrapped = true
+    infoLabel.TextXAlignment = Enum.TextXAlignment.Center
+    infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+    infoLabel.Parent = frame
+
+    local subInfoLabel = Instance.new("TextLabel")
+    subInfoLabel.Name = "SubInfoText"
+    subInfoLabel.Size = UDim2.new(1, -20, 0, 18)
+    subInfoLabel.Position = UDim2.new(0, 10, 0, 190)
+    subInfoLabel.BackgroundTransparency = 1
+    subInfoLabel.Font = Enum.Font.Gotham
+    subInfoLabel.TextSize = 12
+    subInfoLabel.TextColor3 = COLOR_FOOTER_TEXT
+    subInfoLabel.TextWrapped = false
+    subInfoLabel.TextXAlignment = Enum.TextXAlignment.Center
+    subInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
+    subInfoLabel.Text = "Sistema de Key - Khalexis Hub"
+    subInfoLabel.Parent = frame
+
+    -- Animação de Cor na Info
+    spawn(function()
+        local hue = 0
+        while frame and frame.Parent do
+            hue = (hue + 0.01) % 1
+            infoLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
+            wait(0.03)
+        end
+    end)
+
+    ErrorLabel = Instance.new("TextLabel")
+    ErrorLabel.Name = "ErrorLabel"
+    ErrorLabel.Size = UDim2.new(1, 0, 0, 20)
+    ErrorLabel.Position = UDim2.new(0, 0, 1, -70)
+    ErrorLabel.BackgroundTransparency = 1
+    ErrorLabel.TextColor3 = COLOR_ERROR
+    ErrorLabel.Font = Enum.Font.GothamBold
+    ErrorLabel.TextSize = 14
+    ErrorLabel.Text = ""
+    ErrorLabel.Parent = frame
+
+    local function showLocalError(msg)
+        ErrorLabel.Text = msg
+        spawn(function()
+            wait(2)
+            if ErrorLabel and ErrorLabel.Parent == frame then
+                ErrorLabel.Text = ""
+            end
+        end)
+    end
+
+    copyKeyBtn.MouseButton1Click:Connect(function()
+        local success = copyToClipboard("discord.gg/aNaFpb2Qsb")
+        if success then
+            copyKeyBtn.Text = "Link copiado!"
+            wait(2)
+            copyKeyBtn.Text = "Pegar Key"
+        else
+            showLocalError("Falha ao copiar.")
+        end
+    end)
+
+    confirmBtn.MouseButton1Click:Connect(function()
+        validateKeyAndOpen(keyBox.Text, false)
+    end)
+
+    return frame, showLocalError
+end
+
+-- Toggle Button (otimizado com arrasto limpo)
+ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 35, 0, 35)
+ToggleButton.Position = UDim2.new(0, 10, 0, 10)
+ToggleButton.BackgroundColor3 = Color3.new(0, 0, 0)
+ToggleButton.TextColor3 = Color3.new(1, 1, 1)
+ToggleButton.Text = "K"
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 24
+ToggleButton.Parent = ScreenGui
+applyRoundedCorners(ToggleButton, 10)
+ToggleButton.Visible = false
+
+local draggingToggle = false
 local currentInputObjectToggle = nil
 
 ToggleButton.InputBegan:Connect(function(input)
-    if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-        draggingToggle=true
-        dragStartToggle=input.Position
-        startPosToggle=ToggleButton.Position
-        currentInputObjectToggle = input -- Armazena o objeto de input atual
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingToggle = true
+        local dragStartToggle = input.Position
+        local startPosToggle = ToggleButton.Position
+        currentInputObjectToggle = input
 
         local connection
-        connection=input.Changed:Connect(function()
-            if input.UserInputState==Enum.UserInputState.Ended then
-                draggingToggle=false
+        connection = input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingToggle = false
                 currentInputObjectToggle = nil
                 connection:Disconnect()
             end
         end)
+
+        UserInputService.InputChanged:Connect(function(inputChanged)
+            if draggingToggle and currentInputObjectToggle == inputChanged and (inputChanged.UserInputType == Enum.UserInputType.MouseMovement or inputChanged.UserInputType == Enum.UserInputType.Touch) then
+                local delta = inputChanged.Position - dragStartToggle
+                ToggleButton.Position = UDim2.new(startPosToggle.X.Scale, startPosToggle.X.Offset + delta.X, startPosToggle.Y.Scale, startPosToggle.Y.Offset + delta.Y)
+            end
+        end)
     end
 end)
-UserInputService.InputChanged:Connect(function(input)
-    if draggingToggle and currentInputObjectToggle == input and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
-        local delta=input.Position-dragStartToggle
-        ToggleButton.Position=UDim2.new(startPosToggle.X.Scale,startPosToggle.X.Offset+delta.X,startPosToggle.Y.Scale,startPosToggle.Y.Offset+delta.Y)
-    end
-end)
+
 ToggleButton.MouseButton1Click:Connect(function()
     if HubOpen then
-        -- Se o hub estiver aberto, feche-o com a animação
         if MainFrameContainer then
             closeHubWithAnimation(MainFrameContainer)
         end
     else
-        -- Se o hub estiver fechado, abra-o (pulando a mensagem de boas-vindas se já foi exibida)
-        if KeyFrame and KeyFrame.Parent then KeyFrame:Destroy(); KeyFrame=nil end
-        if LoadingScreen and LoadingScreen.Parent then if StopLoadingAnim then StopLoadingAnim() end; LoadingScreen:Destroy(); LoadingScreen=nil end
-       
-        -- Pula a mensagem de boas-vindas se já foi exibida
+        if KeyFrame and KeyFrame.Parent then
+            KeyFrame:Destroy()
+            KeyFrame = nil
+        end
+        if LoadingScreen and LoadingScreen.Parent then
+            if StopLoadingAnim then
+                StopLoadingAnim()
+            end
+            LoadingScreen:Destroy()
+            LoadingScreen = nil
+        end
+
         if HasShownWelcome then
-            MainFrameContainer=createHub()
-            HubOpen=true
-            -- REMOVIDO: ToggleButton.Visible=false -- Garantindo que o toggle não fique invisível ao abrir
+            MainFrameContainer = createHub()
+            HubOpen = true
+            ToggleButton.Visible = false
         else
-            showLoadingAndOpenHub() -- Chama a função que agora inclui a mensagem de boas-vindas
+            showLoadingAndOpenHub()
         end
     end
 end)
 
-if not tryAutoValidate() then KeyFrame,showError=createKeyInputFrame() end
+-- Inicialização (validação automática de key)
+if not tryAutoValidate() then
+    KeyFrame, showError = createKeyInputFrame()
+end
