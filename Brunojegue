@@ -50,81 +50,21 @@ local HubOpen = false
 local ToggleButton
 local ErrorLabel
 local HasShownWelcome = false
-local CurrentTheme = "normal"
 
 local StorageKeyFileName = "KhalexisHubKey.txt"
 local validKeys = {khalexispremium100 = true, khalexislindodms10 = true}
 
-local function saveKeyLocally(key)
-    local success, err = pcall(function()
-        if writefile then writefile(StorageKeyFileName, key)
-        elseif write_file then write_file(StorageKeyFileName, key)
-        else error("File writing not supported.") end
-    end)
-    if not success then showError("Falha ao salvar key: " .. tostring(err)) end
-end
+local function saveKeyLocally(key) pcall(function() if writefile then writefile(StorageKeyFileName, key) elseif write_file then write_file(StorageKeyFileName, key) end end) end
+local function loadKeyLocally() local s,c = pcall(function() if readfile then return readfile(StorageKeyFileName) elseif read_file then return read_file(StorageKeyFileName) end end); if s and c then return c:lower() end; return nil end
+local function removeLocalKey() pcall(function() if delfile then delfile(StorageKeyFileName)elseif deletefile then deletefile(StorageKeyFileName) end end) end
 
-local function loadKeyLocally()
-    local success, content = pcall(function()
-        if readfile then return readfile(StorageKeyFileName)
-        elseif read_file then return read_file(StorageKeyFileName)
-        end
-    end)
-    if success and content then return content:lower() end
-    return nil
+local function showAutoMessage(msg) 
+    local m = Instance.new("Frame"); m.Name="AutoMessageFrame"; m.Size=UDim2.new(0,320,0,45); m.Position=UDim2.new(1,-330,1,-55); m.BackgroundColor3=COLOR_BLACK; m.BorderSizePixel=0; m.Parent=ScreenGui; applyRoundedCorners(m,10); 
+    local l=Instance.new("TextLabel"); l.Size=UDim2.new(1,-20,1,-10); l.Position=UDim2.new(0,10,0,5); l.BackgroundTransparency=1; l.TextColor3=COLOR_TEXT; l.Font=Enum.Font.GothamBold; l.TextSize=16; l.Text=msg; l.TextWrapped=true; l.TextXAlignment=Enum.TextXAlignment.Left; l.TextYAlignment=Enum.TextYAlignment.Center; l.Parent=m; 
+    spawn(function() wait(4); if m and m.Parent then m:Destroy() end end) 
 end
-
-local function removeLocalKey()
-    local success, err = pcall(function()
-        if delfile then delfile(StorageKeyFileName)
-        elseif deletefile then deletefile(StorageKeyFileName)
-        end
-    end)
-    if not success then showError("Falha ao remover key: " .. tostring(err)) end
-end
-
-local function showAutoMessage(msg)
-    local m = Instance.new("Frame")
-    m.Name = "AutoMessageFrame"
-    m.Size = UDim2.new(0, 320, 0, 45)
-    m.Position = UDim2.new(1, -330, 1, -55)
-    m.BackgroundColor3 = COLOR_BLACK
-    m.BorderSizePixel = 0
-    m.Parent = ScreenGui
-    applyRoundedCorners(m, 10)
-    local l = Instance.new("TextLabel")
-    l.Size = UDim2.new(1, -20, 1, -10)
-    l.Position = UDim2.new(0, 10, 0, 5)
-    l.BackgroundTransparency = 1
-    l.TextColor3 = COLOR_TEXT
-    l.Font = Enum.Font.GothamBold
-    l.TextSize = 16
-    l.Text = msg
-    l.TextWrapped = true
-    l.TextXAlignment = Enum.TextXAlignment.Left
-    l.TextYAlignment = Enum.TextYAlignment.Center
-    l.Parent = m
-    spawn(function() wait(4); if m and m.Parent then m:Destroy() end end)
-end
-
-local function showError(msg)
-    if ErrorLabel then
-        ErrorLabel.Text = msg
-        spawn(function() wait(2); if ErrorLabel and ErrorLabel.Parent then ErrorLabel.Text = "" end end)
-    end
-end
-
-local function copyToClipboard(text)
-    local success, err = pcall(function()
-        if setclipboard then setclipboard(text)
-        elseif toclipboard then toclipboard(text)
-        else error("Clipboard function not supported.") end
-    end)
-    if not success then
-        showError("Clipboard não suportado. Copie manualmente: discord.gg/aNaFpb2Qsb")
-    end
-    return success
-end
+local function showError(msg) if ErrorLabel then ErrorLabel.Text=msg; spawn(function() wait(2); if ErrorLabel and ErrorLabel.Parent then ErrorLabel.Text="" end end) end end
+local function copyToClipboard(text) return pcall(function() if setclipboard then setclipboard(text)elseif toclipboard then toclipboard(text) else error("Clipboard function not supported.") end end) end
 
 local function closeHubWithAnimation(container)
     if not (container and container.Parent) then return end
@@ -187,7 +127,6 @@ local function showLoadingScreen()
     local angle = 0
     local connection
     connection = RunService.RenderStepped:Connect(function()
-        if not frame or not frame.Parent then connection:Disconnect(); return end
         angle = (angle + 6) % 360
         orangeBall.Rotation = angle
         whiteBall.Rotation = -angle * 2
@@ -211,10 +150,7 @@ local function applyTheme(themeName)
     if titleBar then titleBar.BackgroundColor3 = palette.title_bar end
     if categoryFrame then categoryFrame.BackgroundColor3 = palette.category_bg end
     if scriptFrame then scriptFrame.BackgroundColor3 = palette.script_frame_bg end
-    if footerBackground and (themeName == "normal" or themeName == "preto" or themeName == "transparente") then
-        footerBackground.BackgroundColor3 = palette.title_bar
-    end
-    CurrentTheme = themeName
+    if footerBackground and (themeName == "normal" or themeName == "preto" or themeName == "transparente") then footerBackground.BackgroundColor3 = palette.title_bar end
 end
 
 local function createHub()
@@ -297,10 +233,10 @@ local function createHub()
     local searchBox = Instance.new("TextBox")
     searchBox.Name = "CategorySearchBox"
     searchBox.Size = UDim2.new(0, 120, 0, 22)
-    searchBox.Position = UDim2.new(0, 5, 0, 50)
+    searchBox.Position = UDim2.new(0, 5, 0, 50) -- Após TitleBar (40px) + 5px margem
     searchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     searchBox.TextColor3 = COLOR_TEXT
-    searchBox.PlaceholderText = "Pesquisar..."
+    searchBox.PlaceholderText = "🔍 Pesquisar..."
     searchBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
     searchBox.Text = ""
     searchBox.Font = Enum.Font.Gotham
@@ -319,12 +255,12 @@ local function createHub()
     searchBoxGradient.Parent = searchBoxBorder
     local categoryFrame = Instance.new("ScrollingFrame")
     categoryFrame.Name = "CategoryFrame"
-    categoryFrame.Size = UDim2.new(0, 120, 0, 168)
-    categoryFrame.Position = UDim2.new(0, 5, 0, 77)
+    categoryFrame.Size = UDim2.new(0, 120, 0, 168) -- Altura fixa de 168px (espaço disponível)
+    categoryFrame.Position = UDim2.new(0, 5, 0, 77) -- Após TitleBar (40px) + searchBox (22px) + 5px + 10px margem
     categoryFrame.BackgroundColor3 = COLOR_CATEGORY_BG
     categoryFrame.BorderSizePixel = 0
-    categoryFrame.ScrollBarThickness = 4
-    categoryFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 140, 0)
+    categoryFrame.ScrollBarThickness = 4 -- Barra de rolagem mais discreta
+    categoryFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 140, 0) -- Cor personalizada
     categoryFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
     categoryFrame.Parent = frame
     applyRoundedCorners(categoryFrame, 12)
@@ -352,7 +288,7 @@ local function createHub()
     layoutCategory.Parent = categoryContainer
     layoutCategory:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         categoryContainer.Size = UDim2.new(1, -10, 0, layoutCategory.AbsoluteContentSize.Y)
-        categoryFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(layoutCategory.AbsoluteContentSize.Y + 10, 200))
+        categoryFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(layoutCategory.AbsoluteContentSize.Y + 10, 200)) -- Garante scroll mínimo
     end)
     searchBox:GetPropertyChangedSignal("Text"):Connect(function()
         local s = searchBox.Text:lower()
@@ -365,8 +301,8 @@ local function createHub()
     end)
     local scriptFrame = Instance.new("ScrollingFrame")
     scriptFrame.Name = "ScriptFrame"
-    scriptFrame.Size = UDim2.new(1, -135, 0, 195)
-    scriptFrame.Position = UDim2.new(0, 130, 0, 40)
+    scriptFrame.Size = UDim2.new(1, -135, 0, 195) -- Altura ajustada para 195px (280px - 40px TitleBar - 45px Footer)
+    scriptFrame.Position = UDim2.new(0, 130, 0, 40) -- Começa após TitleBar
     scriptFrame.BackgroundColor3 = COLOR_BLACK
     scriptFrame.BorderSizePixel = 0
     scriptFrame.ScrollBarThickness = 4
@@ -397,7 +333,6 @@ local function createHub()
     layoutScript.Parent = scriptContainer
     layoutScript:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         scriptContainer.Size = UDim2.new(1, -20, 0, layoutScript.AbsoluteContentSize.Y)
-        scriptFrame.CanvasSize = UDim2.new(0, 0, 0, layoutScript.AbsoluteContentSize.Y + 20)
     end)
     local scriptFooter = Instance.new("TextLabel")
     scriptFooter.Name = "ScriptFooter"
@@ -412,11 +347,11 @@ local function createHub()
     scriptFooter.TextYAlignment = Enum.TextYAlignment.Bottom
     scriptFooter.LayoutOrder = 999
     scriptFooter.Parent = scriptContainer
-    scriptFooter.Visible = true
+    scriptFooter.Visible = false
     local footerBackground = Instance.new("Frame")
     footerBackground.Name = "FooterBackground"
     footerBackground.Size = UDim2.new(1, -10, 0, 40)
-    footerBackground.Position = UDim2.new(0, 5, 1, -45)
+    footerBackground.Position = UDim2.new(0, 5, 1, -45) -- 5px acima do limite inferior
     footerBackground.BackgroundColor3 = COLOR_TITLEBAR
     footerBackground.BackgroundTransparency = 0
     footerBackground.BorderSizePixel = 0
@@ -520,23 +455,6 @@ local function createHub()
     playerNameLabel.TextSize = 10
     playerNameLabel.TextXAlignment = Enum.TextXAlignment.Left
     playerNameLabel.Parent = playerInfo
-    local themeButton = Instance.new("TextButton")
-    themeButton.Name = "ThemeButton"
-    themeButton.Size = UDim2.new(0, 80, 0, 20)
-    themeButton.Position = UDim2.new(0, 100, 0.5, -10)
-    themeButton.BackgroundColor3 = COLOR_SCRIPT_BTN
-    themeButton.TextColor3 = COLOR_TEXT
-    themeButton.Text = "Mudar Tema"
-    themeButton.Font = Enum.Font.Gotham
-    themeButton.TextSize = 12
-    applyRoundedCorners(themeButton, 8)
-    themeButton.Parent = footerBackground
-    local themeNames = {"normal", "preto", "laranja", "roxo", "transparente"}
-    local themeIndex = 1
-    themeButton.MouseButton1Click:Connect(function()
-        themeIndex = (themeIndex % #themeNames) + 1
-        applyTheme(themeNames[themeIndex])
-    end)
     local dragging = false
     local dragInput, dragStart, startPos
     local currentInputObject = nil
@@ -594,19 +512,11 @@ local function createHub()
             btn.Active = false
             btn.AutoButtonColor = false
             spawn(function()
-                local success, err = pcall(func)
-                if not success then
-                    showError("Erro ao executar script: " .. tostring(err))
-                    btn.Text = name
-                    btn.Active = true
-                    btn.AutoButtonColor = true
-                else
-                    wait(3)
-                    closeHubWithAnimation(MainFrameContainer)
-                end
+                pcall(func)
+                wait(3)
+                closeHubWithAnimation(MainFrameContainer)
             end)
         end)
-        scriptFrame.CanvasSize = UDim2.new(0, 0, 0, layoutScript.AbsoluteContentSize.Y + 20)
         return btn
     end
     local function createUpdateLabel(text, textColor, font)
@@ -621,7 +531,6 @@ local function createHub()
         lbl.TextXAlignment = Enum.TextXAlignment.Center
         lbl.TextYAlignment = Enum.TextYAlignment.Top
         lbl.Parent = scriptContainer
-        scriptFrame.CanvasSize = UDim2.new(0, 0, 0, layoutScript.AbsoluteContentSize.Y + 20)
         return lbl
     end
     local function createCategoryButton(name, contents, layoutOrder)
@@ -649,7 +558,7 @@ local function createHub()
         if layoutOrder then btn.LayoutOrder = layoutOrder end
         btn.MouseButton1Click:Connect(function()
             clearScripts()
-            scriptFooter.Visible = true
+            scriptFooter.Visible = false
             if typeof(contents) == "table" then
                 for _, s in ipairs(contents) do createScriptButton(s.Name, s.Func) end
             elseif typeof(contents) == "string" then
@@ -694,35 +603,18 @@ local function createHub()
     local naturalDisasterScripts = {{Name = "BaconJJScript", Func = function() loadstring(game:HttpGet("https://pastebin.com/raw/MAnXu0qv"))() end}}
     local forsakenScripts = {{Name = "SNT HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Snowt69/SNT-HUB/refs/heads/main/Forsaken"))() end}}
     local pegueOPeixeScripts = {{Name = "VinzHub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Vinzyy13/VinzHub/refs/heads/main/Fish-It"))() end}}
- Tertiary
     local murderMysteryScripts = {{Name = "Thunder hub MM2", Func = function() loadstring(game:HttpGet('https://raw.githubusercontent.com/Roman34296589/SnapSanixHUB/refs/heads/main/SnapSanixHUB.lua'))() end}}
     local weakLegacy2Scripts = {{Name = "L4BIB HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/L4BIBKAZI/L4BIB-HUB/refs/heads/main/Weak%20Legacy%202"))() end}}
-    local plantaVSBrainrotScripts = {
-        {Name = "LUMIN HUB", Func = function() loadstring(game:HttpGet("http://luminon.top/loader.lua"))() end},
-        {Name = "LUNNOR HUB", Func = function() loadstring(game:HttpGet("https://lunor.dev/loader"))() end},
-        {Name = "THAN HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/thantzy/thanhub/refs/heads/main/thanv1"))() end},
-        {Name = "OMG HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Omgshit/Scripts/main/MainLoader.lua"))() end},
-        {Name = "CHIYO HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/kaisenlmao/loader/refs/heads/main/chiyo.lua"))() end},
-        {Name = "TORA HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/main/PlantsVsBrainrots"))() end},
-        {Name = "SILENT HUB", Func = function() loadstring(game:HttpGet("https://pastefy.app/2DsuRU5s/raw"))() end},
-        {Name = "NAT HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/dy1zn4t/NatHub/refs/heads/main/loader"))() end},
-        {Name = "DYNA HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/DynaFetchy/Scripts/refs/heads/main/Loader.lua"))() end},
-        {Name = "FLAME HUB", Func = function() loadstring(game:HttpGet('https://raw.githubusercontent.com/shizukidev/FlameNslx/refs/heads/main/flamexnslx.lua'))() end},
-        {Name = "OVER FLOW", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/OverflowBGSI/Overflow/refs/heads/main/loader.txt"))() end},
-        {Name = "FUG", Func = function() loadstring(game:HttpGet("https://gist.githubusercontent.com/UCT-hub/b8fcd843274469d860f91b041eb7f52f/raw/7d491ea8078224e31b8850192bd3f2da37acec8f/UCTHUBDOFUG"))() end},
-        {Name = "SOLO HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxendo902/Brainrot-Game/refs/heads/main/SoloHub/NewScript", true))() end},
-        {Name = "AJAZZ", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/onliengamerop/Steal-a-brainrot/refs/heads/main/Protected_3771863424757750.lua.txt"))() end},
-        {Name = "CARTOLA HUB", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Davi999z/Cartola-Hub/refs/heads/main/StealABrainrot.lua", true))() end},
-        {Name = "MOONDIETY", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/m00ndiety/Steal-a-brainrot/refs/heads/main/Steal-a-Brainrot"))() end},
-        {Name = "LURK NO KEY", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/egor2078f/Lurkv3/refs/heads/main/main.lua", true))() end}
-    }
+    local plantaVSBrainrotScripts = {{Name = "Gumanba", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/main/PlantsVsBrainrots"))() end}}
     local deadRailsScripts = {
         {Name = "Qiwik hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Qiwikox12/stubrawl/refs/heads/main/DeadRails.txt"))() end},
         {Name = "Tora IsMe", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/refs/heads/main/DeadRails", true))() end}
     }
     local testeDeQiScripts = {{Name = "Aqua-Hub", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/ExploiterGuy/Aqua-Hub/refs/heads/main/IQ%20TEST.txt"))() end}}
     local passOrDieScripts = {{Name = "DAVITROLLZ", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Davidfhdgfyyfytyttry/DAVITROLLZ-BRASIL/refs/heads/main/Pass%20or%20die"))() end}}
-    local mathMurderScripts = {{Name = "Tora IsMe", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/refs/heads/main/MathMurder", true))() end}}
+    local mathMurderScripts = {
+        {Name = "Tora IsMe", Func = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/gumanba/Scripts/refs/heads/main/MathMurder", true))() end}
+    }
     local fightingGamesScripts = {{Name = "Hub Fighting (Exemplo 1)", Func = function() loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_FIGHTING_GAMES_1"))() end}}
     local simulationScripts = {{Name = "Hub Sim (Exemplo 1)", Func = function() loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_SIMULATION_1"))() end}}
     local tycoonScripts = {{Name = "Hub Tycoon (Exemplo 1)", Func = function() loadstring(game:HttpGet("URL_DO_SEU_SCRIPT_TYCOON_1"))() end}}
@@ -755,7 +647,6 @@ local function createHub()
 
     local firstCategoryButton = categoryContainer:FindFirstChildOfClass("TextButton")
     if firstCategoryButton then firstCategoryButton:MouseButton1Click() end
-    applyTheme(CurrentTheme)
     return animationContainer
 end
 
@@ -826,15 +717,7 @@ local function validateKeyAndOpen(key, isAuto)
     end
 end
 
-local function tryAutoValidate()
-    local savedKey = loadKeyLocally()
-    if savedKey and validKeys[savedKey] then
-        return validateKeyAndOpen(savedKey, true)
-    else
-        removeLocalKey()
-        return false
-    end
-end
+local function tryAutoValidate() local savedKey = loadKeyLocally(); if savedKey and validKeys[savedKey] then return validateKeyAndOpen(savedKey, true) else removeLocalKey(); return false end end
 
 local function createKeyInputFrame()
     local frame = Instance.new("Frame")
@@ -867,12 +750,7 @@ local function createKeyInputFrame()
     byLabel.TextXAlignment = Enum.TextXAlignment.Center
     byLabel.TextYAlignment = Enum.TextYAlignment.Top
     byLabel.Parent = frame
-    local hueConnection
-    hueConnection = RunService.RenderStepped:Connect(function()
-        if not frame or not frame.Parent then hueConnection:Disconnect(); return end
-        local hue = (tick() % 10) / 10
-        titleLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
-    end)
+    spawn(function() local hue = 0; while frame and frame.Parent do hue = (hue + 0.01) % 1; titleLabel.TextColor3 = Color3.fromHSV(hue, 1, 1); wait(0.03) end end)
     local keyBox = Instance.new("TextBox")
     keyBox.Name = "KeyBox"
     keyBox.Size = UDim2.new(1, -30, 0, 35)
@@ -933,12 +811,7 @@ local function createKeyInputFrame()
     subInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
     subInfoLabel.Text = "Sistema de Key - Khalexis Hub"
     subInfoLabel.Parent = frame
-    local hueConnectionInfo
-    hueConnectionInfo = RunService.RenderStepped:Connect(function()
-        if not frame or not frame.Parent then hueConnectionInfo:Disconnect(); return end
-        local hue = (tick() % 10) / 10
-        infoLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
-    end)
+    spawn(function() local hue = 0; while frame and frame.Parent do hue = (hue + 0.01) % 1; infoLabel.TextColor3 = Color3.fromHSV(hue, 1, 1); wait(0.03) end end)
     ErrorLabel = Instance.new("TextLabel")
     ErrorLabel.Name = "ErrorLabel"
     ErrorLabel.Size = UDim2.new(1, 0, 0, 20)
@@ -949,18 +822,9 @@ local function createKeyInputFrame()
     ErrorLabel.TextSize = 14
     ErrorLabel.Text = ""
     ErrorLabel.Parent = frame
-    local function showLocalError(msg)
-        ErrorLabel.Text = msg
-        spawn(function() wait(2); if ErrorLabel and ErrorLabel.Parent == frame then ErrorLabel.Text = "" end end)
-    end
-    copyKeyBtn.MouseButton1Click:Connect(function()
-        local s = copyToClipboard("discord.gg/aNaFpb2Qsb")
-        if s then copyKeyBtn.Text = "Link copiado!"; wait(2); copyKeyBtn.Text = "Pegar Key"
-        else showLocalError("Falha ao copiar.") end
-    end)
-    confirmBtn.MouseButton1Click:Connect(function()
-        validateKeyAndOpen(keyBox.Text:gsub("%s", ""):lower(), false)
-    end)
+    local function showLocalError(msg) ErrorLabel.Text = msg; spawn(function() wait(2); if ErrorLabel and ErrorLabel.Parent == frame then ErrorLabel.Text = "" end end) end
+    copyKeyBtn.MouseButton1Click:Connect(function() local s, _ = copyToClipboard("discord.gg/aNaFpb2Qsb"); if s then copyKeyBtn.Text = "Link copiado!"; wait(2); copyKeyBtn.Text = "Pegar Key" else showLocalError("Falha ao copiar.") end end)
+    confirmBtn.MouseButton1Click:Connect(function() validateKeyAndOpen(keyBox.Text:gsub("%s", ""):lower(), false) end)
     return frame, showLocalError
 end
 
@@ -1009,17 +873,9 @@ ToggleButton.MouseButton1Click:Connect(function()
         if HasShownWelcome then
             MainFrameContainer = createHub()
             HubOpen = true
-            ToggleButton.Visible = false
         else
             showLoadingAndOpenHub()
-            ToggleButton.Visible = false
         end
-    end
-end)
-UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-    if gameProcessedEvent then return end
-    if input.KeyCode == Enum.KeyCode.K then
-        ToggleButton:MouseButton1Click()
     end
 end)
 if not tryAutoValidate() then KeyFrame, showError = createKeyInputFrame() end
